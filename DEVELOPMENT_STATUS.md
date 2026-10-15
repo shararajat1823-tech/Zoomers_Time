@@ -22,7 +22,7 @@ PostgreSQL). Four EF migrations applied. No vulnerable packages in any project.
 | .NET 8 SDK (8.0.131) | ✅ installed (via apt) |
 | NuGet reachable | ✅ |
 | PostgreSQL 16 | ✅ running; `zoomers_dev` + `zoomers_test` DBs, user `zoomers` |
-| Android SDK / emulator | ⛔ not available in this container — Android code is written but device-verified by the developer locally |
+| Android SDK / emulator | ⛔ not available — Android code is written & reviewed but compiled/run by the developer in Android Studio |
 | Docker daemon | ⛔ not running (native Postgres used instead) |
 
 > Note: the dev Postgres is started per-session and resets on container
@@ -46,7 +46,27 @@ PostgreSQL). Four EF migrations applied. No vulnerable packages in any project.
 | Core infra: Result/pagination primitives | ✅ (Result/Error, CursorPage) |
 | Initial EF migration (Users/Profiles/Settings/Tokens) | ✅ applied |
 | CI workflow (build + test w/ Postgres + vuln scan) | ✅ |
-| Android project skeleton | ⬜ (deferred; backend-first this session) |
+| Android project skeleton | ✅ written (see Android section below) |
+
+## Android app (`android/`)
+
+Kotlin + Compose client with the Lumi-inspired, fully-responsive design system,
+wired to the API. **Written & reviewed, not compiled here** (no Android SDK in
+this container) — build in Android Studio.
+
+| Item | Status |
+|------|--------|
+| Gradle project + version catalog (AGP 8.5 / Kotlin 2.0 / Compose BOM) | ✅ written |
+| Design system (light+dark theme, type, shapes, components) | ✅ written |
+| Responsive foundation (WindowSizeClass → bar/rail, capped widths, grid cols) | ✅ written |
+| Networking (Retrofit + kotlinx-serialization, auth interceptor, refresh rotation) | ✅ written |
+| Token persistence (DataStore) + repositories (auth/feed/profile) | ✅ written |
+| Auth screens (login/register) + session gate | ✅ written |
+| Home feed (stories, pill tabs, post cards, carousel, infinite scroll, states) | ✅ written |
+| Profile (me + stats + grid + logout) | ✅ written |
+| Bottom bar + side rail navigation (adaptive) | ✅ written |
+| Search / Create / Reels / Messages / Comments screens | ⬜ placeholders |
+| Device/emulator verification + UI tests | ⬜ developer-side |
 
 ## Phase 2 — MVP social experience
 
@@ -106,7 +126,10 @@ With the Phase 2 MVP backend essentially complete, the natural forks are:
 
 ## Known limitations (honest)
 
-- Android app not built/verified in this environment (no SDK/emulator).
+- Android app is written but **not compiled/run** in this environment (no
+  SDK/emulator) — first-build nits are resolved by the developer in Android
+  Studio. Token storage uses DataStore in the starter and must move to
+  EncryptedSharedPreferences/Keystore before release.
 - External providers (S3, Redis, FCM, video transcode) are local/in-memory
   stubs behind interfaces; real providers are a later config swap.
 - Dev database is ephemeral per container session.

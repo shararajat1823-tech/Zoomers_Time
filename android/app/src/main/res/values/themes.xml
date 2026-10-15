@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Base Activity theme. Compose supplies the real design system; this only sets
+      the pre-draw window background and removes the action bar. A values-night
+      variant provides the dark window background.
+    -->
+    <style name="Theme.Zoomers" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>
