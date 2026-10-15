@@ -1,0 +1,6 @@
+@Zoomers.Api_HostAddress = http://localhost:5142
+
+GET {{Zoomers.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

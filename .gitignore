@@ -1,0 +1,42 @@
+# ---- Secrets / local env (never commit) ----
+*.env
+.env
+.env.local
+**/appsettings.*.local.json
+**/secrets.json
+
+# ---- .NET ----
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+project.lock.json
+artifacts/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# ---- Rider / VS / VS Code ----
+.idea/
+.vs/
+*.suo
+.vscode/*
+!.vscode/extensions.json
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Android (for the future mobile module) ----
+*.iml
+.gradle/
+local.properties
+/android/build/
+/android/**/build/
+/android/.idea/
+*.apk
+*.aab
+*.keystore
+!debug.keystore

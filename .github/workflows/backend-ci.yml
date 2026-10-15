@@ -1,0 +1,70 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, "claude/**" ]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: zoomers
+          POSTGRES_PASSWORD: devpassword
+          POSTGRES_DB: zoomers_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U zoomers"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      # Test configuration (non-production, CI-only values).
+      ConnectionStrings__Default: "Host=localhost;Port=5432;Database=zoomers_test;Username=zoomers;Password=devpassword"
+      Jwt__SigningKey: "ci-only-signing-key-at-least-32-bytes-long-000000"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        working-directory: backend
+        run: dotnet restore Zoomers.sln
+
+      - name: Build
+        working-directory: backend
+        run: dotnet build Zoomers.sln --configuration Release --no-restore
+
+      - name: Test
+        working-directory: backend
+        run: dotnet test Zoomers.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Vulnerable package scan
+        working-directory: backend
+        run: dotnet list Zoomers.sln package --vulnerable --include-transitive
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "backend/**/test-results.trx"
+          if-no-files-found: ignore
