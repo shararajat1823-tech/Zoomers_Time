@@ -8,10 +8,11 @@ Legend: ✅ done & verified · 🟡 in progress · ⛔ blocked · ⬜ pending
 
 _Last updated: 2026-10-15 — session `session_01UmYnzqGPAqDnyGdJByNdUJ`_
 
-**Latest result:** Phase 1 foundation + Phase 2 **auth**, **social graph**, and
-**profiles** slices implemented and verified. Backend builds clean (0 warnings)
-and **42 automated tests pass** (16 unit + 26 integration against PostgreSQL).
-Two EF migrations applied. No vulnerable packages in any project.
+**Latest result:** Phase 1 foundation + Phase 2 **auth**, **social graph**,
+**profiles**, **posts/media**, **following feed**, and **engagement** slices
+implemented and verified. Backend builds clean (0 warnings) and **52 automated
+tests pass** (16 unit + 36 integration against PostgreSQL). Three EF migrations
+applied. No vulnerable packages in any project.
 
 ## Environment (this cloud container)
 
@@ -60,9 +61,14 @@ Two EF migrations applied. No vulnerable packages in any project.
 | Blocks: block/unblock, mutual invisibility, edge removal | ✅ verified |
 | Privacy enforcement (private accounts, pending-request grants no access) | ✅ verified |
 | Go-public auto-approves pending requests | ✅ verified |
-| Posts + media upload sessions | ⬜ |
-| Following feed (cursor pagination) | ⬜ |
-| Likes / comments / saves | ⬜ |
+| Media upload-session flow (create → upload → verify → complete) | ✅ verified |
+| Posts: create (image/video/carousel), get, delete (ownership) | ✅ verified |
+| Server-side media verification + authorized media download (IDOR-safe) | ✅ verified |
+| Post visibility (Public/Followers/Private) + account-privacy + block-aware | ✅ verified |
+| Profile post grid + saved posts (cursor) | ✅ verified |
+| Following feed (keyset cursor pagination) | ✅ verified |
+| Likes (idempotent, consistent counts) + saves | ✅ verified |
+| Comments + replies, author/owner moderation, comment likes | ✅ verified |
 | Search (users/hashtags/posts) | ⬜ |
 | Basic settings | ⬜ |
 
@@ -80,15 +86,19 @@ reporting, release builds, deployment docs. — ⬜ pending
 
 ## Next concrete steps (next session)
 
-1. **Posts + media slice**: `Post`/`PostMedia`/`UploadSession` entities, the
-   upload-session flow (`POST /media/upload-sessions` + complete) with
-   server-side media verification, create/get/delete post, profile post grid.
-   Block-aware + private-visibility enforcement reusing `CanViewContentAsync`.
-2. **Following feed**: cursor-paginated chronological feed over the social graph.
-3. **Engagement**: likes/comments/saves with idempotency + counter consistency.
-4. **Search**: users/hashtags via pg_trgm indexes.
-5. Then Android project skeleton (`core:*` + `feature:authentication`) wired to
-   the auth API.
+1. **Search & discovery**: username/display-name/hashtag/caption search via
+   `pg_trgm` GIN indexes; hashtag extraction + linking on post create;
+   explore/suggested users. Respect blocks + privacy.
+2. **Settings**: expose/update `UserSettings` (theme, language, audience
+   controls, notification prefs); blocked/muted account lists.
+3. **Hashtags & mentions**: parse captions/comments, link entities, mention
+   notifications.
+4. Then Android project skeleton (`core:*` + `feature:authentication`,
+   `feature:home`) wired to the API.
+
+## Phase 3 preview (media & engagement depth)
+Stories, reels, background media processing (thumbnails/transcode worker),
+push notifications, improved feed ranking seam.
 
 ## Known limitations (honest)
 

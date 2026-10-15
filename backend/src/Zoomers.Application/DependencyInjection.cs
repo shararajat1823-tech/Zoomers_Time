@@ -1,6 +1,9 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Zoomers.Application.Engagement;
 using Zoomers.Application.Identity;
+using Zoomers.Application.Media;
+using Zoomers.Application.Posts;
 using Zoomers.Application.Profiles;
 using Zoomers.Application.Social;
 
@@ -14,6 +17,11 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ISocialGraphService, SocialGraphService>();
+        services.AddScoped<IMediaService, MediaService>();
+        services.AddScoped<PostService>();
+        services.AddScoped<IPostService>(sp => sp.GetRequiredService<PostService>());
+        services.AddScoped<IFeedService, FeedService>();
+        services.AddScoped<IEngagementService, EngagementService>();
         services.AddValidatorsFromAssemblyContaining<AuthService>(ServiceLifetime.Scoped);
         return services;
     }

@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zoomers.Api.Common;
+using Zoomers.Application.Posts;
 using Zoomers.Application.Profiles;
 using Zoomers.Application.Profiles.Dtos;
 using Zoomers.Application.Social;
@@ -15,11 +16,13 @@ public sealed class MeController : ApiControllerBase
 {
     private readonly IProfileService _profiles;
     private readonly ISocialGraphService _social;
+    private readonly IPostService _posts;
 
-    public MeController(IProfileService profiles, ISocialGraphService social)
+    public MeController(IProfileService profiles, ISocialGraphService social, IPostService posts)
     {
         _profiles = profiles;
         _social = social;
+        _posts = posts;
     }
 
     /// <summary>Returns the authenticated user's own profile.</summary>
@@ -46,5 +49,13 @@ public sealed class MeController : ApiControllerBase
     {
         if (CurrentUserId is not { } userId) return Unauthorized();
         return (await _social.GetIncomingRequestsAsync(userId, cursor, limit, ct)).ToResponse();
+    }
+
+    /// <summary>Lists the authenticated user's saved posts.</summary>
+    [HttpGet("saved")]
+    public async Task<IActionResult> Saved([FromQuery] string? cursor, [FromQuery] int limit, CancellationToken ct)
+    {
+        if (CurrentUserId is not { } userId) return Unauthorized();
+        return (await _posts.GetSavedAsync(userId, cursor, limit, ct)).ToResponse();
     }
 }

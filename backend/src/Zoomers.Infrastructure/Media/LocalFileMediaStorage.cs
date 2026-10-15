@@ -36,21 +36,36 @@ public sealed class LocalFileMediaStorage : IMediaStorage
 
     public Task<SignedUrl> CreateUploadUrlAsync(string storageKey, string contentType, long maxBytes, CancellationToken ct = default)
     {
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/{Uri.EscapeDataString(storageKey)}";
         _logger.LogDebug("Issued local upload URL for {StorageKey}", storageKey);
-        return Task.FromResult(new SignedUrl(url, _clock.UtcNow.AddMinutes(_options.SignedUrlMinutes)));
+        return Task.FromResult(new SignedUrl(BuildUrl(storageKey), _clock.UtcNow.AddMinutes(_options.SignedUrlMinutes)));
     }
 
     public Task<SignedUrl> CreateDownloadUrlAsync(string storageKey, CancellationToken ct = default)
-    {
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/{Uri.EscapeDataString(storageKey)}";
-        return Task.FromResult(new SignedUrl(url, _clock.UtcNow.AddMinutes(_options.SignedUrlMinutes)));
-    }
+        => Task.FromResult(new SignedUrl(BuildUrl(storageKey), _clock.UtcNow.AddMinutes(_options.SignedUrlMinutes)));
+
+    // The storage key is built from URL-safe characters (lowercase hex + '/'), so its
+    // segments map directly onto the catch-all media route without escaping.
+    private string BuildUrl(string storageKey) => $"{_options.PublicBaseUrl.TrimEnd('/')}/{storageKey}";
 
     public Task<long?> TryGetObjectSizeAsync(string storageKey, CancellationToken ct = default)
     {
         var path = ResolvePath(storageKey);
         return Task.FromResult<long?>(File.Exists(path) ? new FileInfo(path).Length : null);
+    }
+
+    public async Task SaveAsync(string storageKey, Stream content, string contentType, CancellationToken ct = default)
+    {
+        var path = ResolvePath(storageKey);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await using var file = File.Create(path);
+        await content.CopyToAsync(file, ct);
+    }
+
+    public Task<Stream?> OpenReadAsync(string storageKey, CancellationToken ct = default)
+    {
+        var path = ResolvePath(storageKey);
+        Stream? stream = File.Exists(path) ? File.OpenRead(path) : null;
+        return Task.FromResult(stream);
     }
 
     public Task DeleteAsync(string storageKey, CancellationToken ct = default)

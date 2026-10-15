@@ -20,5 +20,11 @@ public interface IMediaStorage
     /// <summary>Verifies an uploaded object exists and returns its size, for server-side validation.</summary>
     Task<long?> TryGetObjectSizeAsync(string storageKey, CancellationToken ct = default);
 
+    /// <summary>Stores an object server-side (used by the dev storage endpoint; S3 SDKs support this too).</summary>
+    Task SaveAsync(string storageKey, Stream content, string contentType, CancellationToken ct = default);
+
+    /// <summary>Opens an object for reading, or null if it does not exist.</summary>
+    Task<Stream?> OpenReadAsync(string storageKey, CancellationToken ct = default);
+
     Task DeleteAsync(string storageKey, CancellationToken ct = default);
 }

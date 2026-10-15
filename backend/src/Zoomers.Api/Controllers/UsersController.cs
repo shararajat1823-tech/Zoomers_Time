@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zoomers.Api.Common;
+using Zoomers.Application.Posts;
 using Zoomers.Application.Profiles;
 using Zoomers.Application.Profiles.Dtos;
 using Zoomers.Application.Social;
@@ -15,11 +16,13 @@ public sealed class UsersController : ApiControllerBase
 {
     private readonly IProfileService _profiles;
     private readonly ISocialGraphService _social;
+    private readonly IPostService _posts;
 
-    public UsersController(IProfileService profiles, ISocialGraphService social)
+    public UsersController(IProfileService profiles, ISocialGraphService social, IPostService posts)
     {
         _profiles = profiles;
         _social = social;
+        _posts = posts;
     }
 
     /// <summary>Returns a public profile by username (with viewer relationship and visibility).</summary>
@@ -77,6 +80,14 @@ public sealed class UsersController : ApiControllerBase
     {
         if (CurrentUserId is not { } viewerId) return Unauthorized();
         return (await _social.GetFollowingAsync(viewerId, userId, cursor, limit, ct)).ToResponse();
+    }
+
+    /// <summary>A user's post grid (respecting privacy and blocks).</summary>
+    [HttpGet("{userId:guid}/posts")]
+    public async Task<IActionResult> Posts(Guid userId, [FromQuery] string? cursor, [FromQuery] int limit, CancellationToken ct)
+    {
+        if (CurrentUserId is not { } viewerId) return Unauthorized();
+        return (await _posts.GetUserPostsAsync(viewerId, userId, cursor, limit, ct)).ToResponse();
     }
 
     /// <summary>Blocks a user (removes follow edges both ways and pending requests).</summary>

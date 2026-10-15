@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Zoomers.Application.Abstractions;
 using Zoomers.Domain.Common;
+using Zoomers.Domain.Engagement;
 using Zoomers.Domain.Identity;
+using Zoomers.Domain.Media;
+using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
 
@@ -28,6 +31,13 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     public DbSet<Follow> Follows => Set<Follow>();
     public DbSet<FollowRequest> FollowRequests => Set<FollowRequest>();
     public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
+    public DbSet<Post> Posts => Set<Post>();
+    public DbSet<PostMedia> PostMedia => Set<PostMedia>();
+    public DbSet<UploadSession> UploadSessions => Set<UploadSession>();
+    public DbSet<PostLike> PostLikes => Set<PostLike>();
+    public DbSet<SavedPost> SavedPosts => Set<SavedPost>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

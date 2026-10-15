@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Zoomers.Domain.Engagement;
 using Zoomers.Domain.Identity;
+using Zoomers.Domain.Media;
+using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
 
@@ -21,6 +24,14 @@ public interface IApplicationDbContext
     DbSet<Follow> Follows { get; }
     DbSet<FollowRequest> FollowRequests { get; }
     DbSet<UserBlock> UserBlocks { get; }
+
+    DbSet<Post> Posts { get; }
+    DbSet<PostMedia> PostMedia { get; }
+    DbSet<UploadSession> UploadSessions { get; }
+    DbSet<PostLike> PostLikes { get; }
+    DbSet<SavedPost> SavedPosts { get; }
+    DbSet<Comment> Comments { get; }
+    DbSet<CommentLike> CommentLikes { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
