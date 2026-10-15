@@ -787,8 +787,8 @@ INNER JOIN AGG ON ISNULL(M.ZoneCode,'') = ISNULL(AGG.ZoneCode,'')
     AND b.MMClaimDt >= @FromDate
           AND b.MMClaimDt < @ToDateExclusive
     AND b.MMClaimDt IS NOT NULL
-          AND b.isUnderValidation = 0
-          AND b.isUnderVarification = 0
+          AND A.isUnderValidation = 0
+          AND A.isUnderVarification = 0
     AND (A.DataSource IN ('MIG','MIG1','MIG2') OR NULLIF(LTRIM(RTRIM(A.Datasource)), '') IS NULL)
     AND (@StateID IS NULL OR a.StateID = @StateID)
     AND (@DistID IS NULL OR a.DistID = @DistID)
@@ -814,8 +814,8 @@ INNER JOIN AGG ON ISNULL(M.ZoneCode,'') = ISNULL(AGG.ZoneCode,'')
     AND b.MMClaimDt >= @FromDate
           AND b.MMClaimDt < @ToDateExclusive
     AND b.MMClaimDt IS NOT NULL
-          AND b.isUnderValidation = 0
-          AND b.isUnderVarification = 0
+          AND A.isUnderValidation = 0
+          AND A.isUnderVarification = 0
     AND (A.DataSource IN ('MIG','MIG1','MIG2') OR NULLIF(LTRIM(RTRIM(A.Datasource)), '') IS NULL)
     AND (@StateID IS NULL OR a.StateID = @StateID)
     AND (@DistID IS NULL OR a.DistID = @DistID)

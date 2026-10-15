@@ -84,7 +84,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_BankProcess_MMClaimDt' AND object_id = OBJECT_ID('dbo.t_BankProcess'))
 CREATE NONCLUSTERED INDEX IX_BankProcess_MMClaimDt
 ON dbo.t_BankProcess (MMClaimDt)
-INCLUDE (ApplID, MMClaimed, MMTrxfDate, isUnderValidation, isUnderVarification);
+INCLUDE (ApplID, MMClaimed, MMTrxfDate);
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_BankProcess_MMTrxfDate' AND object_id = OBJECT_ID('dbo.t_BankProcess'))
