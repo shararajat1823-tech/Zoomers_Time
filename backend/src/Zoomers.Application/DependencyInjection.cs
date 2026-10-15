@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Zoomers.Application.Identity;
 using Zoomers.Application.Profiles;
+using Zoomers.Application.Social;
 
 namespace Zoomers.Application;
 
@@ -12,6 +13,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<ISocialGraphService, SocialGraphService>();
         services.AddValidatorsFromAssemblyContaining<AuthService>(ServiceLifetime.Scoped);
         return services;
     }

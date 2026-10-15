@@ -3,6 +3,7 @@ using Zoomers.Application.Abstractions;
 using Zoomers.Domain.Common;
 using Zoomers.Domain.Identity;
 using Zoomers.Domain.Profiles;
+using Zoomers.Domain.Social;
 
 namespace Zoomers.Infrastructure.Persistence;
 
@@ -24,6 +25,9 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<Follow> Follows => Set<Follow>();
+    public DbSet<FollowRequest> FollowRequests => Set<FollowRequest>();
+    public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +41,17 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     {
         StampTimestamps();
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default)
+    {
+        var strategy = Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await Database.BeginTransactionAsync(cancellationToken);
+            await action(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+        });
     }
 
     /// <summary>Sets CreatedAt/UpdatedAt consistently so services don't repeat it.</summary>

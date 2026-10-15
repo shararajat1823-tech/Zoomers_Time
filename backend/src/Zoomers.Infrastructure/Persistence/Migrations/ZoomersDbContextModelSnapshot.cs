@@ -277,6 +277,90 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.ToTable("UserSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Social.Follow", b =>
+                {
+                    b.Property<Guid>("FollowerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FolloweeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("FollowerId", "FolloweeId");
+
+                    b.HasIndex("FolloweeId")
+                        .HasDatabaseName("IX_Follows_FolloweeId");
+
+                    b.HasIndex("FollowerId")
+                        .HasDatabaseName("IX_Follows_FollowerId");
+
+                    b.ToTable("Follows", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Follows_NoSelfFollow", "\"FollowerId\" <> \"FolloweeId\"");
+                        });
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.FollowRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequesterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterId", "TargetId")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_FollowRequests_Pending")
+                        .HasFilter("\"Status\" = 0");
+
+                    b.HasIndex("TargetId", "Status")
+                        .HasDatabaseName("IX_FollowRequests_Target_Status");
+
+                    b.ToTable("FollowRequests", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_FollowRequests_NoSelf", "\"RequesterId\" <> \"TargetId\"");
+                        });
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.UserBlock", b =>
+                {
+                    b.Property<Guid>("BlockerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BlockedId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("BlockerId", "BlockedId");
+
+                    b.HasIndex("BlockedId")
+                        .HasDatabaseName("IX_UserBlocks_BlockedId");
+
+                    b.ToTable("UserBlocks", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserBlocks_NoSelf", "\"BlockerId\" <> \"BlockedId\"");
+                        });
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Identity.PasswordResetToken", b =>
                 {
                     b.HasOne("Zoomers.Domain.Identity.User", "User")
@@ -319,6 +403,63 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.Follow", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "Followee")
+                        .WithMany()
+                        .HasForeignKey("FolloweeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "Follower")
+                        .WithMany()
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Followee");
+
+                    b.Navigation("Follower");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.FollowRequest", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "Target")
+                        .WithMany()
+                        .HasForeignKey("TargetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Requester");
+
+                    b.Navigation("Target");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.UserBlock", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "Blocked")
+                        .WithMany()
+                        .HasForeignKey("BlockedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "Blocker")
+                        .WithMany()
+                        .HasForeignKey("BlockerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Blocked");
+
+                    b.Navigation("Blocker");
                 });
 
             modelBuilder.Entity("Zoomers.Domain.Identity.User", b =>

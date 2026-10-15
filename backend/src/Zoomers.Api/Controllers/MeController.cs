@@ -3,33 +3,48 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zoomers.Api.Common;
 using Zoomers.Application.Profiles;
+using Zoomers.Application.Profiles.Dtos;
+using Zoomers.Application.Social;
 
 namespace Zoomers.Api.Controllers;
 
-[ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/users")]
+[Route("api/v{version:apiVersion}/users/me")]
 [Authorize]
-public sealed class MeController : ControllerBase
+public sealed class MeController : ApiControllerBase
 {
     private readonly IProfileService _profiles;
-    private readonly ICurrentUser _currentUser;
+    private readonly ISocialGraphService _social;
 
-    public MeController(IProfileService profiles, ICurrentUser currentUser)
+    public MeController(IProfileService profiles, ISocialGraphService social)
     {
         _profiles = profiles;
-        _currentUser = currentUser;
+        _social = social;
     }
 
     /// <summary>Returns the authenticated user's own profile.</summary>
-    [HttpGet("me")]
+    [HttpGet]
     [ProducesResponseType(typeof(ProfileView), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Me(CancellationToken ct)
+    public async Task<IActionResult> Get(CancellationToken ct)
     {
-        var userId = _currentUser.UserId;
-        if (userId is null)
-            return Unauthorized();
+        if (CurrentUserId is not { } userId) return Unauthorized();
+        return (await _profiles.GetMeAsync(userId, ct)).ToResponse();
+    }
 
-        return (await _profiles.GetMeAsync(userId.Value, ct)).ToResponse();
+    /// <summary>Edits the authenticated user's profile (display name, bio, website, privacy).</summary>
+    [HttpPatch]
+    [ProducesResponseType(typeof(ProfileView), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(UpdateProfileRequest request, CancellationToken ct)
+    {
+        if (CurrentUserId is not { } userId) return Unauthorized();
+        return (await _profiles.UpdateMeAsync(userId, request, ct)).ToResponse();
+    }
+
+    /// <summary>Lists the authenticated user's pending incoming follow requests.</summary>
+    [HttpGet("follow-requests")]
+    public async Task<IActionResult> IncomingRequests([FromQuery] string? cursor, [FromQuery] int limit, CancellationToken ct)
+    {
+        if (CurrentUserId is not { } userId) return Unauthorized();
+        return (await _social.GetIncomingRequestsAsync(userId, cursor, limit, ct)).ToResponse();
     }
 }

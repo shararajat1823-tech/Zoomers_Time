@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zoomers.Domain.Identity;
 using Zoomers.Domain.Profiles;
+using Zoomers.Domain.Social;
 
 namespace Zoomers.Application.Abstractions;
 
@@ -17,5 +18,12 @@ public interface IApplicationDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<PasswordResetToken> PasswordResetTokens { get; }
 
+    DbSet<Follow> Follows { get; }
+    DbSet<FollowRequest> FollowRequests { get; }
+    DbSet<UserBlock> UserBlocks { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Executes work inside a database transaction (all-or-nothing).</summary>
+    Task ExecuteInTransactionAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default);
 }

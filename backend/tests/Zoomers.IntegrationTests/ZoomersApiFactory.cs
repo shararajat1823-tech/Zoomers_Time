@@ -68,6 +68,7 @@ public sealed class ZoomersApiFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ZoomersDbContext>();
         await db.Database.ExecuteSqlRawAsync(
-            "TRUNCATE \"RefreshTokens\", \"PasswordResetTokens\", \"UserSettings\", \"UserProfiles\", \"Users\" RESTART IDENTITY CASCADE;");
+            "TRUNCATE \"Follows\", \"FollowRequests\", \"UserBlocks\", \"RefreshTokens\", " +
+            "\"PasswordResetTokens\", \"UserSettings\", \"UserProfiles\", \"Users\" RESTART IDENTITY CASCADE;");
     }
 }

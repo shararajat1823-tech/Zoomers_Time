@@ -8,10 +8,10 @@ Legend: ✅ done & verified · 🟡 in progress · ⛔ blocked · ⬜ pending
 
 _Last updated: 2026-10-15 — session `session_01UmYnzqGPAqDnyGdJByNdUJ`_
 
-**This session's result:** Phase 1 foundation complete + the Phase 2
-authentication slice implemented and verified. Backend builds clean (0 warnings)
-and **30 automated tests pass** (16 unit + 14 integration against PostgreSQL).
-Initial EF migration applied. No vulnerable packages in any project.
+**Latest result:** Phase 1 foundation + Phase 2 **auth**, **social graph**, and
+**profiles** slices implemented and verified. Backend builds clean (0 warnings)
+and **42 automated tests pass** (16 unit + 26 integration against PostgreSQL).
+Two EF migrations applied. No vulnerable packages in any project.
 
 ## Environment (this cloud container)
 
@@ -54,13 +54,16 @@ Initial EF migration applied. No vulnerable packages in any project.
 | Auth: password reset (request + reset, single-use hashed token) | ✅ verified |
 | Auth: rate limiting (strict on auth endpoints) | ✅ verified (429 test) |
 | Auth: `GET /users/me` (JWT-protected) | ✅ verified |
-| Profiles + settings (entities + profile read) | 🟡 (entities + /me done; edit/privacy pending) |
-| Social graph: follow / unfollow / requests | ⬜ |
+| Profiles: read own (/users/me), public (/users/{username}), edit (PATCH) | ✅ verified |
+| Social graph: follow/unfollow, requests (accept/reject/cancel), remove follower | ✅ verified |
+| Social graph: followers/following lists (keyset cursor pagination) | ✅ verified |
+| Blocks: block/unblock, mutual invisibility, edge removal | ✅ verified |
+| Privacy enforcement (private accounts, pending-request grants no access) | ✅ verified |
+| Go-public auto-approves pending requests | ✅ verified |
 | Posts + media upload sessions | ⬜ |
 | Following feed (cursor pagination) | ⬜ |
 | Likes / comments / saves | ⬜ |
 | Search (users/hashtags/posts) | ⬜ |
-| Privacy enforcement (server-side) | ⬜ |
 | Basic settings | ⬜ |
 
 ## Phase 3 — Media & engagement
@@ -77,18 +80,14 @@ reporting, release builds, deployment docs. — ⬜ pending
 
 ## Next concrete steps (next session)
 
-1. **Social graph slice**: `Follow`/`FollowRequest` entities + endpoints
-   (follow/unfollow, request/accept/reject, followers/following lists with
-   cursor pagination), private-account enforcement, duplicate-relationship
-   prevention via composite PK. Authorization tests for private access.
-2. **Profiles slice**: `PATCH /users/me` (edit profile + privacy), public
-   profile read with visibility rules, block-aware visibility.
-3. **Posts + media slice**: `Post`/`PostMedia` entities, upload-session flow
-   (`POST /media/upload-sessions` + complete), create/get/delete post,
-   server-side media verification.
-4. **Following feed**: cursor-paginated chronological feed over the social graph.
-5. **Engagement**: likes/comments/saves with idempotency + counter consistency.
-6. Then Android project skeleton (`core:*` + `feature:authentication`) wired to
+1. **Posts + media slice**: `Post`/`PostMedia`/`UploadSession` entities, the
+   upload-session flow (`POST /media/upload-sessions` + complete) with
+   server-side media verification, create/get/delete post, profile post grid.
+   Block-aware + private-visibility enforcement reusing `CanViewContentAsync`.
+2. **Following feed**: cursor-paginated chronological feed over the social graph.
+3. **Engagement**: likes/comments/saves with idempotency + counter consistency.
+4. **Search**: users/hashtags via pg_trgm indexes.
+5. Then Android project skeleton (`core:*` + `feature:authentication`) wired to
    the auth API.
 
 ## Known limitations (honest)
