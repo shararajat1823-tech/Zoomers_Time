@@ -38,4 +38,7 @@ public interface ISocialGraphService
 
     /// <summary>When an account switches to public, approve all its pending incoming requests as follows.</summary>
     Task ConvertPendingRequestsToFollowsAsync(Guid targetId, CancellationToken ct = default);
+
+    Task<Result> MuteAsync(Guid muterId, Guid mutedId, bool mutePosts, bool muteStories, CancellationToken ct = default);
+    Task<Result> UnmuteAsync(Guid muterId, Guid mutedId, CancellationToken ct = default);
 }

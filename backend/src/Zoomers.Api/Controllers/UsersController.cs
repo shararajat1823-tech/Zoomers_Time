@@ -105,4 +105,20 @@ public sealed class UsersController : ApiControllerBase
         if (CurrentUserId is not { } actorId) return Unauthorized();
         return (await _social.UnblockAsync(actorId, userId, ct)).ToResponse();
     }
+
+    /// <summary>Mutes a user's posts and/or stories (they are not notified).</summary>
+    [HttpPost("{userId:guid}/mute")]
+    public async Task<IActionResult> Mute(Guid userId, [FromQuery] bool posts = true, [FromQuery] bool stories = true, CancellationToken ct = default)
+    {
+        if (CurrentUserId is not { } actorId) return Unauthorized();
+        return (await _social.MuteAsync(actorId, userId, posts, stories, ct)).ToResponse();
+    }
+
+    /// <summary>Unmutes a user.</summary>
+    [HttpDelete("{userId:guid}/mute")]
+    public async Task<IActionResult> Unmute(Guid userId, CancellationToken ct)
+    {
+        if (CurrentUserId is not { } actorId) return Unauthorized();
+        return (await _social.UnmuteAsync(actorId, userId, ct)).ToResponse();
+    }
 }

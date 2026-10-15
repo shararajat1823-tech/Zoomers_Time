@@ -13,6 +13,9 @@ public sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserProf
         b.HasIndex(p => p.UserId).IsUnique();
 
         b.Property(p => p.DisplayName).HasMaxLength(50).IsRequired();
+        // Trigram index for fuzzy display-name search.
+        b.HasIndex(p => p.DisplayName).HasDatabaseName("IX_UserProfiles_DisplayName_Trgm")
+            .HasMethod("gin").HasOperators("gin_trgm_ops");
         b.Property(p => p.Bio).HasMaxLength(300);
         b.Property(p => p.Website).HasMaxLength(200);
         b.Property(p => p.AvatarMediaKey).HasMaxLength(512);

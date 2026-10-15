@@ -32,7 +32,9 @@ public sealed class FeedService : IFeedService
         // Blocks remove the follow edge, so blocked authors never appear.
         var query = _db.Posts.Where(p =>
             p.Visibility != PostVisibility.Private &&
-            _db.Follows.Any(f => f.FollowerId == userId && f.FolloweeId == p.AuthorId));
+            _db.Follows.Any(f => f.FollowerId == userId && f.FolloweeId == p.AuthorId) &&
+            // Posts from muted (posts) accounts are hidden from the feed.
+            !_db.UserMutes.Any(m => m.MuterId == userId && m.MutedId == p.AuthorId && m.MutePosts));
 
         return _posts.PagePostsAsync(query, userId, cursor, limit, ct);
     }

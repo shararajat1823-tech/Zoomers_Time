@@ -5,6 +5,7 @@ using Zoomers.Domain.Media;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
+using Zoomers.Domain.Tags;
 
 namespace Zoomers.Application.Abstractions;
 
@@ -32,6 +33,11 @@ public interface IApplicationDbContext
     DbSet<SavedPost> SavedPosts { get; }
     DbSet<Comment> Comments { get; }
     DbSet<CommentLike> CommentLikes { get; }
+
+    DbSet<Hashtag> Hashtags { get; }
+    DbSet<PostHashtag> PostHashtags { get; }
+    DbSet<Mention> Mentions { get; }
+    DbSet<UserMute> UserMutes { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

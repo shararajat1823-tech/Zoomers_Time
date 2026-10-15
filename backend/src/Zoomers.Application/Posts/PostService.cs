@@ -78,6 +78,8 @@ public sealed class PostService : IPostService
             _db.Posts.Add(post);
             var profile = await _db.UserProfiles.FirstOrDefaultAsync(p => p.UserId == authorId, token);
             if (profile is not null) profile.PostCount += 1;
+
+            await ApplyHashtagsAndMentionsAsync(post.Id, post.Caption, token);
             await _db.SaveChangesAsync(token);
         }, ct);
 
@@ -264,6 +266,47 @@ public sealed class PostService : IPostService
         }
 
         return result;
+    }
+
+    /// <summary>Extracts #hashtags and @mentions from a caption and links them to the post.</summary>
+    private async Task ApplyHashtagsAndMentionsAsync(Guid postId, string? caption, CancellationToken ct)
+    {
+        var tags = Tags.TextEntities.ExtractHashtags(caption);
+        if (tags.Count > 0)
+        {
+            var existing = await _db.Hashtags.Where(h => tags.Contains(h.Tag)).ToListAsync(ct);
+            var byTag = existing.ToDictionary(h => h.Tag);
+
+            foreach (var tag in tags)
+            {
+                if (!byTag.TryGetValue(tag, out var hashtag))
+                {
+                    hashtag = new Domain.Tags.Hashtag { Tag = tag, UsageCount = 0, CreatedAt = _clock.UtcNow };
+                    _db.Hashtags.Add(hashtag);
+                    byTag[tag] = hashtag;
+                }
+                hashtag.UsageCount += 1;
+                _db.PostHashtags.Add(new Domain.Tags.PostHashtag { PostId = postId, HashtagId = hashtag.Id });
+            }
+        }
+
+        var usernames = Tags.TextEntities.ExtractMentions(caption);
+        if (usernames.Count > 0)
+        {
+            var users = await _db.Users
+                .Where(u => usernames.Contains(u.Username.ToLower()))
+                .Select(u => u.Id)
+                .ToListAsync(ct);
+
+            foreach (var userId in users)
+                _db.Mentions.Add(new Domain.Tags.Mention
+                {
+                    SourceType = Domain.Tags.MentionSource.Post,
+                    SourceId = postId,
+                    MentionedUserId = userId,
+                    CreatedAt = _clock.UtcNow
+                });
+        }
     }
 
     private static string? Trim(string? value, int max) =>

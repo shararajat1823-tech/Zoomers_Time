@@ -14,6 +14,9 @@ public sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         b.Property(p => p.Type).HasConversion<int>();
         b.Property(p => p.Visibility).HasConversion<int>();
         b.Property(p => p.Caption).HasMaxLength(2200);
+        // Trigram index for caption search.
+        b.HasIndex(p => p.Caption).HasDatabaseName("IX_Posts_Caption_Trgm")
+            .HasMethod("gin").HasOperators("gin_trgm_ops");
         b.Property(p => p.LocationName).HasMaxLength(100);
         b.Property(p => p.AccessibilityText).HasMaxLength(1000);
 

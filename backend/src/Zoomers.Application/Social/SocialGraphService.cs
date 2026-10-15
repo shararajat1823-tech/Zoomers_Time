@@ -319,6 +319,36 @@ public sealed class SocialGraphService : ISocialGraphService
         return await _db.Follows.AnyAsync(f => f.FollowerId == viewerId && f.FolloweeId == targetUserId, ct);
     }
 
+    public async Task<Result> MuteAsync(Guid muterId, Guid mutedId, bool mutePosts, bool muteStories, CancellationToken ct = default)
+    {
+        if (muterId == mutedId)
+            return Error.Validation("social.cannot_mute_self", "You cannot mute yourself.");
+        if (!await _db.Users.AnyAsync(u => u.Id == mutedId, ct))
+            return UserNotFound;
+
+        var existing = await _db.UserMutes.FirstOrDefaultAsync(m => m.MuterId == muterId && m.MutedId == mutedId, ct);
+        if (existing is null)
+            _db.UserMutes.Add(new UserMute { MuterId = muterId, MutedId = mutedId, MutePosts = mutePosts, MuteStories = muteStories, CreatedAt = _clock.UtcNow });
+        else
+        {
+            existing.MutePosts = mutePosts;
+            existing.MuteStories = muteStories;
+        }
+        await _db.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> UnmuteAsync(Guid muterId, Guid mutedId, CancellationToken ct = default)
+    {
+        var mute = await _db.UserMutes.FirstOrDefaultAsync(m => m.MuterId == muterId && m.MutedId == mutedId, ct);
+        if (mute is not null)
+        {
+            _db.UserMutes.Remove(mute);
+            await _db.SaveChangesAsync(ct);
+        }
+        return Result.Success();
+    }
+
     public async Task ConvertPendingRequestsToFollowsAsync(Guid targetId, CancellationToken ct = default)
     {
         var pending = await _db.FollowRequests

@@ -7,6 +7,7 @@ using Zoomers.Domain.Media;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
+using Zoomers.Domain.Tags;
 
 namespace Zoomers.Infrastructure.Persistence;
 
@@ -38,11 +39,16 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     public DbSet<SavedPost> SavedPosts => Set<SavedPost>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
+    public DbSet<Hashtag> Hashtags => Set<Hashtag>();
+    public DbSet<PostHashtag> PostHashtags => Set<PostHashtag>();
+    public DbSet<Mention> Mentions => Set<Mention>();
+    public DbSet<UserMute> UserMutes => Set<UserMute>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Case-insensitive text for usernames/emails/tags.
+        // Case-insensitive text for usernames/emails; trigram search for names/tags/captions.
         modelBuilder.HasPostgresExtension("citext");
+        modelBuilder.HasPostgresExtension("pg_trgm");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ZoomersDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }

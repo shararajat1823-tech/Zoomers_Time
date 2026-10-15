@@ -9,10 +9,11 @@ Legend: ✅ done & verified · 🟡 in progress · ⛔ blocked · ⬜ pending
 _Last updated: 2026-10-15 — session `session_01UmYnzqGPAqDnyGdJByNdUJ`_
 
 **Latest result:** Phase 1 foundation + Phase 2 **auth**, **social graph**,
-**profiles**, **posts/media**, **following feed**, and **engagement** slices
-implemented and verified. Backend builds clean (0 warnings) and **52 automated
-tests pass** (16 unit + 36 integration against PostgreSQL). Three EF migrations
-applied. No vulnerable packages in any project.
+**profiles**, **posts/media**, **following feed**, **engagement**, **search &
+discovery**, **hashtags/mentions**, and **settings** slices implemented and
+verified — Phase 2 MVP backend is essentially complete. Backend builds clean
+(0 warnings) and **59 automated tests pass** (16 unit + 43 integration against
+PostgreSQL). Four EF migrations applied. No vulnerable packages in any project.
 
 ## Environment (this cloud container)
 
@@ -69,8 +70,11 @@ applied. No vulnerable packages in any project.
 | Following feed (keyset cursor pagination) | ✅ verified |
 | Likes (idempotent, consistent counts) + saves | ✅ verified |
 | Comments + replies, author/owner moderation, comment likes | ✅ verified |
-| Search (users/hashtags/posts) | ⬜ |
-| Basic settings | ⬜ |
+| Search: users / hashtags / posts (trigram, privacy/block-aware) | ✅ verified |
+| Hashtag + mention extraction on post create; hashtag feed | ✅ verified |
+| Discovery: suggested users | ✅ verified |
+| Settings: get/update (theme, language, audience + push prefs) | ✅ verified |
+| Mute/unmute (feed exclusion); blocked + muted lists | ✅ verified |
 
 ## Phase 3 — Media & engagement
 Stories, video posts, reels, background media processing, push notifications,
@@ -86,19 +90,19 @@ reporting, release builds, deployment docs. — ⬜ pending
 
 ## Next concrete steps (next session)
 
-1. **Search & discovery**: username/display-name/hashtag/caption search via
-   `pg_trgm` GIN indexes; hashtag extraction + linking on post create;
-   explore/suggested users. Respect blocks + privacy.
-2. **Settings**: expose/update `UserSettings` (theme, language, audience
-   controls, notification prefs); blocked/muted account lists.
-3. **Hashtags & mentions**: parse captions/comments, link entities, mention
-   notifications.
-4. Then Android project skeleton (`core:*` + `feature:authentication`,
-   `feature:home`) wired to the API.
+With the Phase 2 MVP backend essentially complete, the natural forks are:
 
-## Phase 3 preview (media & engagement depth)
-Stories, reels, background media processing (thumbnails/transcode worker),
-push notifications, improved feed ranking seam.
+1. **Android app** — multi-module Compose project (`core:*` + `feature:
+   authentication`, `feature:home`, `feature:profile`) wired to the live API.
+   Note: not device-verifiable in this cloud container (no Android SDK), so it
+   is written compile-oriented and verified by the developer locally.
+2. **Phase 3 backend depth** — stories & reels, background media processing
+   (thumbnail/transcode worker filling the `IMediaProcessor` seam), push
+   notifications (FCM behind `IPushSender`), notifications module (new follower,
+   like, comment, mention, follow-request) with the mention/like/comment events
+   already produced by Phase 2.
+3. **Hardening** — mention notifications, comment hashtag/mention extraction,
+   OpenAPI examples, load tests on feed/search.
 
 ## Known limitations (honest)
 

@@ -21,6 +21,7 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Zoomers.Domain.Engagement.Comment", b =>
@@ -361,6 +362,12 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Caption")
+                        .HasDatabaseName("IX_Posts_Caption_Trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Caption"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Caption"), new[] { "gin_trgm_ops" });
+
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("IX_Posts_CreatedAt");
 
@@ -469,6 +476,12 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DisplayName")
+                        .HasDatabaseName("IX_UserProfiles_DisplayName_Trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("DisplayName"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("DisplayName"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -613,6 +626,109 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_UserBlocks_NoSelf", "\"BlockerId\" <> \"BlockedId\"");
                         });
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.UserMute", b =>
+                {
+                    b.Property<Guid>("MuterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MutedId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MutePosts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("MuteStories")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("MuterId", "MutedId");
+
+                    b.HasIndex("MutedId")
+                        .HasDatabaseName("IX_UserMutes_MutedId");
+
+                    b.ToTable("UserMutes", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserMutes_NoSelf", "\"MuterId\" <> \"MutedId\"");
+                        });
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Tags.Hashtag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Tag" }, "IX_Hashtags_Tag_Trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "Tag" }, "IX_Hashtags_Tag_Trgm"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex(new[] { "Tag" }, "IX_Hashtags_Tag_Trgm"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex(new[] { "Tag" }, "UQ_Hashtags_Tag")
+                        .IsUnique();
+
+                    b.ToTable("Hashtags", (string)null);
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Tags.Mention", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MentionedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SourceType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MentionedUserId")
+                        .HasDatabaseName("IX_Mentions_MentionedUserId");
+
+                    b.HasIndex("SourceType", "SourceId")
+                        .HasDatabaseName("IX_Mentions_Source");
+
+                    b.ToTable("Mentions", (string)null);
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Tags.PostHashtag", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("HashtagId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("PostId", "HashtagId");
+
+                    b.HasIndex("HashtagId")
+                        .HasDatabaseName("IX_PostHashtags_HashtagId");
+
+                    b.ToTable("PostHashtags", (string)null);
                 });
 
             modelBuilder.Entity("Zoomers.Domain.Engagement.Comment", b =>
@@ -830,6 +946,55 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.Navigation("Blocked");
 
                     b.Navigation("Blocker");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Social.UserMute", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "Muted")
+                        .WithMany()
+                        .HasForeignKey("MutedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "Muter")
+                        .WithMany()
+                        .HasForeignKey("MuterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Muted");
+
+                    b.Navigation("Muter");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Tags.Mention", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "MentionedUser")
+                        .WithMany()
+                        .HasForeignKey("MentionedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MentionedUser");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Tags.PostHashtag", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Tags.Hashtag", "Hashtag")
+                        .WithMany()
+                        .HasForeignKey("HashtagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Posts.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hashtag");
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Zoomers.Domain.Identity.User", b =>
