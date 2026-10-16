@@ -4,6 +4,9 @@ using Asp.Versioning;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +19,31 @@ using Zoomers.Infrastructure;
 using Zoomers.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ---- Hosting platform wiring (Render/Neon/Railway/Fly/etc.) ----
+// Managed hosts expose the database as a single URL-style DATABASE_URL and tell
+// the process which port to listen on via PORT. Translate both into the shapes
+// the app already understands, so the same image runs locally and in the cloud.
+var databaseUrl = builder.Configuration["DATABASE_URL"];
+if (DatabaseUrl.LooksLikeUrl(databaseUrl))
+{
+    builder.Configuration["ConnectionStrings:Default"] = DatabaseUrl.ToNpgsql(databaseUrl!);
+}
+
+var port = builder.Configuration["PORT"];
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
+// Behind a TLS-terminating proxy (the platform's edge), honour the forwarded
+// scheme/host so redirects and generated URLs stay https.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // ---- Logging (structured; secrets/message bodies never logged) ----
 builder.Host.UseSerilog((context, logger) => logger
@@ -107,9 +135,19 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// ---- CORS ----
+// Native mobile clients don't enforce CORS, but a permissive policy lets the
+// browser Swagger UI and any future web client call the API. Auth is via a
+// bearer header (no cookies), so allowing any origin is safe here.
+const string CorsPolicy = "zoomers-clients";
+builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
 // ---- Health checks ----
+// Liveness (/health/live) has no dependencies so the platform can tell the
+// process is up; readiness (/health/ready) verifies the database is reachable.
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<Zoomers.Infrastructure.Persistence.ZoomersDbContext>("database");
+    .AddDbContextCheck<Zoomers.Infrastructure.Persistence.ZoomersDbContext>("database", tags: new[] { "ready" });
 
 // ---- Swagger / OpenAPI (with bearer auth) ----
 builder.Services.AddEndpointsApiExplorer();
@@ -131,28 +169,42 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// ---- Apply migrations (and optionally seed) on startup when asked ----
+// Off by default so tests and local runs manage their own schema; the hosting
+// platform sets Database__AutoMigrate=true so a fresh managed database is built
+// on first deploy.
+if (app.Configuration.GetValue("Database:AutoMigrate", false))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<Zoomers.Infrastructure.Persistence.ZoomersDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 // ---- Pipeline ----
+app.UseForwardedHeaders();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
+// Swagger is served in every environment so the live API is self-documenting.
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// The platform edge terminates TLS; only redirect to HTTPS inside the container
+// when explicitly asked (e.g. a self-hosted deployment doing its own TLS).
+if (app.Configuration.GetValue("ForceHttps", false))
 {
     app.UseHttpsRedirection();
     app.UseHsts();
 }
 
+app.UseCors(CorsPolicy);
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
 
 app.Run();
 

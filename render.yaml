@@ -1,0 +1,43 @@
+# Render Blueprint — deploys the Zoomers backend and a PostgreSQL database on
+# Render's free tier. From the Render dashboard: New → Blueprint, connect this
+# repo, and Apply. Everything below is provisioned and wired automatically.
+#
+# Free-tier notes:
+#  - The web service sleeps after ~15 min idle; the first request then takes
+#    ~30-60s to wake (cold start). Subsequent requests are fast.
+#  - The free PostgreSQL instance is removed by Render ~30 days after creation.
+#    To keep data long-term, create a free Neon database (neon.tech) and set the
+#    web service's DATABASE_URL to its connection string instead.
+services:
+  - type: web
+    name: zoomers-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health/ready
+    autoDeploy: true
+    envVars:
+      # Database connection, wired from the Render Postgres instance below.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zoomers-db
+          property: connectionString
+      # Build the schema (run EF migrations) automatically on first deploy.
+      - key: Database__AutoMigrate
+        value: "true"
+      # JWT signing key — generated and stored by Render, never committed.
+      - key: Jwt__SigningKey
+        generateValue: true
+      - key: Jwt__Issuer
+        value: zoomers
+      - key: Jwt__Audience
+        value: zoomers.clients
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+
+databases:
+  - name: zoomers-db
+    plan: free
+    databaseName: zoomers
+    user: zoomers

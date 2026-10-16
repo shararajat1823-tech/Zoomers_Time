@@ -1,0 +1,18 @@
+# Build artifacts — never ship host build output into the image.
+**/bin/
+**/obj/
+**/out/
+
+# Tests aren't part of the published API.
+tests/
+
+# Local/editor cruft.
+**/.vs/
+**/.vscode/
+**/*.user
+**/.DS_Store
+
+# Docs and git metadata.
+**/*.md
+.git/
+.gitignore
