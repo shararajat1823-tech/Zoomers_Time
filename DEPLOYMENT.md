@@ -87,6 +87,45 @@ Render injects `PORT` automatically; the app binds to it.
 
 ---
 
+## Photo storage — Cloudflare R2 (free, required for posting)
+
+Posting photos needs object storage. The app uploads images **directly** to the
+store using a short-lived signed URL, so photos never pass through the API host.
+Cloudflare R2 has a generous free tier (10 GB storage, no egress fees) and is
+S3-compatible, which is what the backend speaks.
+
+### 1. Create the bucket
+1. Sign in at <https://dash.cloudflare.com> (free). In the left sidebar open **R2**.
+2. If prompted, enable R2 (no card needed for the free tier).
+3. **Create bucket** → name it `zoomers-media` → Create.
+
+### 2. Create an API token (credentials)
+1. In **R2 → Overview**, note your **Account ID** (top-right of the R2 page).
+2. Click **Manage R2 API Tokens → Create API token**.
+3. Permissions: **Object Read & Write**. Scope it to the `zoomers-media` bucket.
+4. Create, then copy the **Access Key ID** and **Secret Access Key** (shown once).
+
+### 3. Add the credentials to Render
+In the Render dashboard → `zoomers-api` → **Environment**, add:
+
+| Variable | Value |
+|---|---|
+| `Media__S3__ServiceUrl` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
+| `Media__S3__AccessKey` | *(the Access Key ID)* |
+| `Media__S3__SecretKey` | *(the Secret Access Key)* |
+| `Media__S3__Bucket` | `zoomers-media` |
+| `Media__S3__Region` | `auto` |
+
+Save — Render redeploys. On boot the backend detects the S3 config and switches
+media storage from local disk to R2 automatically (no code change). Posting
+photos from the app now works. Until these are set, the backend uses local disk,
+which the mobile app can't upload to directly — so configure R2 before posting.
+
+> Native apps don't use CORS, so no bucket CORS setup is needed. If you later add
+> a **web** client, add a CORS rule on the bucket allowing your web origin.
+
+---
+
 ## Running the container locally (optional)
 
 ```bash

@@ -34,14 +34,37 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.Configure<LocalMediaOptions>(configuration.GetSection(LocalMediaOptions.SectionName));
+        services.Configure<S3StorageOptions>(configuration.GetSection(S3StorageOptions.SectionName));
 
         // Core services.
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IPasswordHasher, PasswordHasherAdapter>();
         services.AddScoped<ITokenService, JwtTokenService>();
 
+        // Media storage: S3-compatible (e.g. Cloudflare R2) when configured,
+        // otherwise local disk for development. Same IMediaStorage contract, so
+        // no caller changes either way.
+        var s3 = configuration.GetSection(S3StorageOptions.SectionName).Get<S3StorageOptions>() ?? new S3StorageOptions();
+        if (s3.Enabled)
+        {
+            services.AddSingleton<Amazon.S3.IAmazonS3>(_ =>
+            {
+                var config = new Amazon.S3.AmazonS3Config
+                {
+                    ServiceURL = s3.ServiceUrl,
+                    ForcePathStyle = s3.ForcePathStyle,
+                    AuthenticationRegion = s3.Region,
+                };
+                return new Amazon.S3.AmazonS3Client(s3.AccessKey, s3.SecretKey, config);
+            });
+            services.AddScoped<IMediaStorage, S3MediaStorage>();
+        }
+        else
+        {
+            services.AddScoped<IMediaStorage, LocalFileMediaStorage>();
+        }
+
         // External-service adapters (local/in-memory first).
-        services.AddScoped<IMediaStorage, LocalFileMediaStorage>();
         services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddScoped<IPushSender, LoggingPushSender>();
 

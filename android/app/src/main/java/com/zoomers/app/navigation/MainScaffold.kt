@@ -20,6 +20,7 @@ import com.zoomers.app.designsystem.component.NavItem
 import com.zoomers.app.designsystem.component.ZBottomBar
 import com.zoomers.app.designsystem.component.ZNavRail
 import com.zoomers.app.designsystem.foundation.rememberZoomersLayout
+import com.zoomers.app.feature.create.CreatePostScreen
 import com.zoomers.app.feature.home.HomeScreen
 import com.zoomers.app.feature.profile.ProfileScreen
 
@@ -61,7 +62,16 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                 )
             }
             composable(Routes.SEARCH) { PlaceholderScreen("Search & Explore") }
-            composable(Routes.CREATE) { PlaceholderScreen("New post") }
+            composable(Routes.CREATE) {
+                val goHome: () -> Unit = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+                CreatePostScreen(onPosted = goHome, onCancel = goHome)
+            }
             composable(Routes.REELS) { PlaceholderScreen("Reels") }
             composable(Routes.PROFILE) { ProfileScreen(gridColumns = layout.gridColumns) }
         }

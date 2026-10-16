@@ -107,6 +107,38 @@ data class PostViewDto(
 @Serializable
 data class LikeStateDto(val liked: Boolean, val likeCount: Int)
 
+// ---- Media upload + post creation ----
+
+@Serializable
+data class CreateUploadSessionRequestDto(val purpose: String, val contentType: String)
+
+@Serializable
+data class UploadSessionResponseDto(
+    val sessionId: String,
+    val storageKey: String,
+    val uploadUrl: String,
+    val expiresAt: String,
+    val status: Int,
+    val maxBytes: Long,
+)
+
+@Serializable
+data class CreatePostMediaItemDto(
+    val uploadSessionId: String,
+    val width: Int? = null,
+    val height: Int? = null,
+    val durationMs: Int? = null,
+)
+
+@Serializable
+data class CreatePostRequestDto(
+    val caption: String?,
+    val visibility: Int,          // 0 public, 1 followers, 2 private
+    val locationName: String? = null,
+    val accessibilityText: String? = null,
+    val media: List<CreatePostMediaItemDto>,
+)
+
 /** RFC 7807 problem response surfaced by the API on errors. */
 @Serializable
 data class ProblemDto(
