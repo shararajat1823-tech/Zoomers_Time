@@ -1,5 +1,6 @@
 package com.zoomers.app.feature.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -147,7 +148,7 @@ private fun HomeTopBar(onOpenNotifications: () -> Unit, onOpenMessages: () -> Un
 }
 
 private fun Modifier.clickableIcon(onClick: () -> Unit): Modifier =
-    this.then(androidx.compose.foundation.clickable(onClickLabel = null, role = null, onClick = onClick))
+    this.clickable(onClick = onClick)
 
 @Composable
 private fun FeedSkeleton(modifier: Modifier = Modifier) {
