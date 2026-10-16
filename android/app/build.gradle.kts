@@ -77,7 +77,8 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     implementation(libs.retrofit)
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+    // JSON (de)serialization uses our own KotlinxJsonConverterFactory (core/network),
+    // backed directly by kotlinx-serialization-json — no third-party converter artifact.
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
