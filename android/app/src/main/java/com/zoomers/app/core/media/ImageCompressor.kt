@@ -20,47 +20,54 @@ object ImageCompressor {
 
     suspend fun fromUri(context: Context, uri: Uri): NewPostImage? = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
-
-        // Read dimensions without allocating the full bitmap.
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-            ?: return@withContext null
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
-
-        // Coarse downsample while decoding to keep memory bounded.
-        var sample = 1
-        val maxSrcEdge = maxOf(bounds.outWidth, bounds.outHeight)
-        while (maxSrcEdge / sample > MaxEdge * 2) sample *= 2
-
-        val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
-        val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, decodeOpts) }
-            ?: return@withContext null
-
-        // Fine scale to the exact maximum edge.
-        val scaled = run {
-            val maxEdge = maxOf(decoded.width, decoded.height)
-            if (maxEdge > MaxEdge) {
-                val ratio = MaxEdge.toFloat() / maxEdge
-                Bitmap.createScaledBitmap(
-                    decoded,
-                    (decoded.width * ratio).toInt().coerceAtLeast(1),
-                    (decoded.height * ratio).toInt().coerceAtLeast(1),
-                    true,
-                ).also { if (it !== decoded) decoded.recycle() }
-            } else {
-                decoded
+        try {
+            // Read dimensions without allocating the full bitmap. In bounds-only
+            // mode decodeStream returns null by design and fills outWidth/outHeight,
+            // so we check the stream and the measured size separately.
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            (resolver.openInputStream(uri) ?: return@withContext null).use {
+                BitmapFactory.decodeStream(it, null, bounds)
             }
-        }
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
 
-        val out = ByteArrayOutputStream()
-        scaled.compress(Bitmap.CompressFormat.JPEG, Quality, out)
-        val result = NewPostImage(
-            bytes = out.toByteArray(),
-            contentType = "image/jpeg",
-            width = scaled.width,
-            height = scaled.height,
-        )
-        scaled.recycle()
-        result
+            // Coarse downsample while decoding to keep memory bounded.
+            var sample = 1
+            val maxSrcEdge = maxOf(bounds.outWidth, bounds.outHeight)
+            while (maxSrcEdge / sample > MaxEdge * 2) sample *= 2
+
+            val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
+            val decoded = (resolver.openInputStream(uri) ?: return@withContext null).use {
+                BitmapFactory.decodeStream(it, null, decodeOpts)
+            } ?: return@withContext null
+
+            // Fine scale to the exact maximum edge.
+            val scaled = run {
+                val maxEdge = maxOf(decoded.width, decoded.height)
+                if (maxEdge > MaxEdge) {
+                    val ratio = MaxEdge.toFloat() / maxEdge
+                    Bitmap.createScaledBitmap(
+                        decoded,
+                        (decoded.width * ratio).toInt().coerceAtLeast(1),
+                        (decoded.height * ratio).toInt().coerceAtLeast(1),
+                        true,
+                    ).also { if (it !== decoded) decoded.recycle() }
+                } else {
+                    decoded
+                }
+            }
+
+            val out = ByteArrayOutputStream()
+            scaled.compress(Bitmap.CompressFormat.JPEG, Quality, out)
+            val result = NewPostImage(
+                bytes = out.toByteArray(),
+                contentType = "image/jpeg",
+                width = scaled.width,
+                height = scaled.height,
+            )
+            scaled.recycle()
+            result
+        } catch (e: Exception) {
+            null
+        }
     }
 }
