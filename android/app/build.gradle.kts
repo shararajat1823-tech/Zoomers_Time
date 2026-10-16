@@ -7,6 +7,15 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Backend the app talks to. Defaults to the live Render deployment so a built
+// APK works on any device; pass -PlocalBackend to target a backend running on
+// your own machine through the Android emulator's host route (10.0.2.2).
+val apiBaseUrl: String = if (project.hasProperty("localBackend")) {
+    "http://10.0.2.2:5080/api/v1/"
+} else {
+    "https://zoomers-api.onrender.com/api/v1/"
+}
+
 android {
     namespace = "com.zoomers.app"
     compileSdk = 34
@@ -21,20 +30,21 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
 
-        // API base URL is build-configurable. 10.0.2.2 reaches the host from the emulator.
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5080/api/v1/\"")
+        // Live backend (Render, free tier). Both build types point here so the
+        // installed APK works on a real device. For local emulator development
+        // against a backend on your machine, build with -PlocalBackend, which
+        // swaps in http://10.0.2.2:5080 (the emulator's route to the host).
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
         debug {
-            // Dev build talks to a local backend over cleartext (see network-security-config).
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5080/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         }
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Production must point at an HTTPS endpoint; supplied via a real build config.
-            buildConfigField("String", "API_BASE_URL", "\"https://api.zoomers.example/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         }
     }
 
