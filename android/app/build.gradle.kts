@@ -77,7 +77,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     implementation(libs.retrofit)
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
