@@ -26,6 +26,10 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Avoid the obsolete "tools" package (removed from the SDK); the runner
+          # already ships platforms/build-tools and AGP finds them.
+          packages: platform-tools
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
