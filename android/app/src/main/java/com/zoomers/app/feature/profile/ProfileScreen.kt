@@ -25,9 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.zoomers.app.core.common.formatCount
+import com.zoomers.app.core.model.PostUi
 import com.zoomers.app.core.model.ProfileUi
 import com.zoomers.app.designsystem.component.EmptyState
 import com.zoomers.app.designsystem.component.ErrorState
@@ -52,6 +55,7 @@ fun ProfileScreen(
             state.error != null -> ErrorState(state.error!!, onRetry = viewModel::load, modifier = Modifier.padding(top = Spacing.xxl))
             state.profile != null -> ProfileContent(
                 profile = state.profile!!,
+                posts = state.posts,
                 gridColumns = gridColumns,
                 onLogout = viewModel::logout,
             )
@@ -61,7 +65,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(profile: ProfileUi, gridColumns: Int, onLogout: () -> Unit) {
+private fun ProfileContent(profile: ProfileUi, posts: List<PostUi>, gridColumns: Int, onLogout: () -> Unit) {
     val colors = ZoomersTheme.colors
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridColumns),
@@ -92,14 +96,24 @@ private fun ProfileContent(profile: ProfileUi, gridColumns: Int, onLogout: () ->
                 Spacer(Modifier.height(Spacing.md))
             }
         }
-        // Post grid placeholder tiles (wire to users/{id}/posts in the next milestone).
-        items(List(profile.postCount.coerceAtMost(12)) { it }) { index ->
+        // Real post grid: first media of each post, loaded from the API.
+        items(posts, key = { it.id }) { post ->
+            val imageUrl = post.media.firstOrNull()?.let { it.thumbnailUrl ?: it.url }
             Box(
                 Modifier
                     .padding(1.dp)
                     .aspectRatio(1f)
-                    .background(tintFor("$index-${profile.username}")),
-            )
+                    .background(tintFor(post.id)),
+            ) {
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = post.caption,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
         }
     }
 }

@@ -38,6 +38,13 @@ interface ZoomersApi {
     @GET("users/me")
     suspend fun me(): Response<ProfileViewDto>
 
+    @GET("users/{userId}/posts")
+    suspend fun userPosts(
+        @Path("userId") userId: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<PostViewDto>>
+
     @GET("feed/following")
     suspend fun followingFeed(
         @Query("cursor") cursor: String?,
