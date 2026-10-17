@@ -56,11 +56,21 @@ data class ProfileViewDto(
     val displayName: String,
     val bio: String? = null,
     val website: String? = null,
+    val avatarUrl: String? = null,
     val isPrivate: Boolean = false,
     val isVerified: Boolean = false,
     val followerCount: Int = 0,
     val followingCount: Int = 0,
     val postCount: Int = 0,
+)
+
+@Serializable
+data class UpdateProfileRequestDto(
+    val displayName: String? = null,
+    val bio: String? = null,
+    val website: String? = null,
+    val isPrivate: Boolean? = null,
+    val avatarUploadSessionId: String? = null,
 )
 
 // ---- Posts ----

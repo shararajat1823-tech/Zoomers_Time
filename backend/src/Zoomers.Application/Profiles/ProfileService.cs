@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Zoomers.Application.Abstractions;
 using Zoomers.Application.Profiles.Dtos;
 using Zoomers.Application.Social;
+using Zoomers.Domain.Media;
 using Zoomers.Shared.Results;
 
 namespace Zoomers.Application.Profiles;
@@ -10,36 +11,50 @@ public sealed class ProfileService : IProfileService
 {
     private readonly IApplicationDbContext _db;
     private readonly ISocialGraphService _social;
+    private readonly IMediaStorage _storage;
     private readonly IClock _clock;
 
-    public ProfileService(IApplicationDbContext db, ISocialGraphService social, IClock clock)
+    public ProfileService(IApplicationDbContext db, ISocialGraphService social, IMediaStorage storage, IClock clock)
     {
         _db = db;
         _social = social;
+        _storage = storage;
         _clock = clock;
     }
 
     public async Task<Result<ProfileView>> GetMeAsync(Guid userId, CancellationToken ct = default)
     {
-        var view = await _db.Users
+        var row = await _db.Users
             .Where(u => u.Id == userId)
-            .Select(u => new ProfileView(
+            .Select(u => new
+            {
                 u.Id,
                 u.Username,
                 u.Profile!.DisplayName,
                 u.Profile.Bio,
                 u.Profile.Website,
+                u.Profile.AvatarMediaKey,
                 u.Profile.IsPrivate,
                 u.Profile.IsVerified,
                 u.Profile.FollowerCount,
                 u.Profile.FollowingCount,
-                u.Profile.PostCount))
+                u.Profile.PostCount,
+            })
             .FirstOrDefaultAsync(ct);
 
-        return view is null
-            ? Error.NotFound("profile.not_found", "Profile not found.")
-            : Result.Success(view);
+        if (row is null)
+            return Error.NotFound("profile.not_found", "Profile not found.");
+
+        var view = new ProfileView(
+            row.Id, row.Username, row.DisplayName, row.Bio, row.Website,
+            await ResolveAvatarUrlAsync(row.AvatarMediaKey, ct),
+            row.IsPrivate, row.IsVerified, row.FollowerCount, row.FollowingCount, row.PostCount);
+
+        return Result.Success(view);
     }
+
+    private async Task<string?> ResolveAvatarUrlAsync(string? avatarMediaKey, CancellationToken ct) =>
+        string.IsNullOrEmpty(avatarMediaKey) ? null : (await _storage.CreateDownloadUrlAsync(avatarMediaKey, ct)).Url;
 
     public async Task<Result<PublicProfileView>> GetByUsernameAsync(Guid viewerId, string username, CancellationToken ct = default)
     {
@@ -62,6 +77,7 @@ public sealed class ProfileService : IProfileService
             target.Profile.DisplayName,
             target.Profile.Bio,
             target.Profile.Website,
+            await ResolveAvatarUrlAsync(target.Profile.AvatarMediaKey, ct),
             target.Profile.IsVerified,
             target.Profile.IsPrivate,
             target.Profile.FollowerCount,
@@ -85,6 +101,16 @@ public sealed class ProfileService : IProfileService
             profile.Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim();
         if (request.Website is not null)
             profile.Website = string.IsNullOrWhiteSpace(request.Website) ? null : request.Website.Trim();
+
+        if (request.AvatarUploadSessionId is { } avatarSessionId)
+        {
+            var session = await _db.UploadSessions.FirstOrDefaultAsync(s => s.Id == avatarSessionId, ct);
+            if (session is null || session.UserId != userId || session.Purpose != UploadPurpose.Avatar)
+                return Error.Validation("profile.invalid_avatar", "That avatar upload could not be found.");
+            if (session.Status != UploadStatus.Completed)
+                return Error.Validation("profile.avatar_incomplete", "The avatar upload is not complete.");
+            profile.AvatarMediaKey = session.StorageKey;
+        }
 
         var switchingToPublic = request.IsPrivate is false && profile.IsPrivate;
         if (request.IsPrivate is not null)

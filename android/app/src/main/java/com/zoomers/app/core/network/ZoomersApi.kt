@@ -11,11 +11,13 @@ import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
 import com.zoomers.app.core.network.dto.RefreshRequestDto
 import com.zoomers.app.core.network.dto.RegisterRequestDto
+import com.zoomers.app.core.network.dto.UpdateProfileRequestDto
 import com.zoomers.app.core.network.dto.UploadSessionResponseDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -37,6 +39,9 @@ interface ZoomersApi {
 
     @GET("users/me")
     suspend fun me(): Response<ProfileViewDto>
+
+    @PATCH("users/me")
+    suspend fun updateMe(@Body body: UpdateProfileRequestDto): Response<ProfileViewDto>
 
     @GET("users/{userId}/posts")
     suspend fun userPosts(

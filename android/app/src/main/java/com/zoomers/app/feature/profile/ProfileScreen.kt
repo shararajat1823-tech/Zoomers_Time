@@ -49,6 +49,7 @@ import com.zoomers.app.designsystem.theme.tintFor
 fun ProfileScreen(
     gridColumns: Int = 3,
     onOpenPost: (String) -> Unit = {},
+    onEditProfile: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -65,6 +66,7 @@ fun ProfileScreen(
                 gridColumns = gridColumns,
                 onLogout = viewModel::logout,
                 onOpenPost = onOpenPost,
+                onEditProfile = onEditProfile,
             )
             else -> EmptyState("No profile")
         }
@@ -78,6 +80,7 @@ private fun ProfileContent(
     gridColumns: Int,
     onLogout: () -> Unit,
     onOpenPost: (String) -> Unit,
+    onEditProfile: () -> Unit,
 ) {
     val colors = ZoomersTheme.colors
     LazyVerticalGrid(
@@ -87,7 +90,7 @@ private fun ProfileContent(
         item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
             Column(Modifier.fillMaxWidth().padding(Spacing.lg)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    ZAvatar(key = profile.username, size = 84.dp, hasStoryRing = true)
+                    ZAvatar(key = profile.username, size = 84.dp, imageUrl = profile.avatarUrl, hasStoryRing = true)
                     Spacer(Modifier.width(Spacing.xl))
                     Stat("Posts", profile.postCount)
                     Stat("Followers", profile.followerCount)
@@ -103,7 +106,7 @@ private fun ProfileContent(
                 }
                 Spacer(Modifier.height(Spacing.md))
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    ZSecondaryButton("Edit profile", onClick = { }, modifier = Modifier.weight(1f))
+                    ZSecondaryButton("Edit profile", onClick = onEditProfile, modifier = Modifier.weight(1f))
                     ZSecondaryButton("Log out", onClick = onLogout, modifier = Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(Spacing.md))

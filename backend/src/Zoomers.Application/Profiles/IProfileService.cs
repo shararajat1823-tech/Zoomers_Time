@@ -10,6 +10,7 @@ public sealed record ProfileView(
     string DisplayName,
     string? Bio,
     string? Website,
+    string? AvatarUrl,
     bool IsPrivate,
     bool IsVerified,
     int FollowerCount,

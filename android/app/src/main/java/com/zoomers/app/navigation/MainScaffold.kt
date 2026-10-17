@@ -22,6 +22,7 @@ import com.zoomers.app.designsystem.component.ZNavRail
 import com.zoomers.app.designsystem.foundation.rememberZoomersLayout
 import com.zoomers.app.feature.create.CreatePostScreen
 import com.zoomers.app.feature.detail.PostDetailScreen
+import com.zoomers.app.feature.editprofile.EditProfileScreen
 import com.zoomers.app.feature.home.HomeScreen
 import com.zoomers.app.feature.profile.ProfileScreen
 
@@ -78,11 +79,18 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                 ProfileScreen(
                     gridColumns = layout.gridColumns,
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
                 )
             }
             composable("${Routes.POST}/{postId}") { entry ->
                 val postId = entry.arguments?.getString("postId").orEmpty()
                 PostDetailScreen(postId = postId, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.EDIT_PROFILE) {
+                EditProfileScreen(
+                    onSaved = { navController.popBackStack() },
+                    onCancel = { navController.popBackStack() },
+                )
             }
         }
     }

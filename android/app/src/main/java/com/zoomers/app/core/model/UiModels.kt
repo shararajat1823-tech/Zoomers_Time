@@ -35,6 +35,7 @@ data class ProfileUi(
     val displayName: String,
     val bio: String?,
     val website: String?,
+    val avatarUrl: String?,
     val isPrivate: Boolean,
     val isVerified: Boolean,
     val followerCount: Int,
@@ -68,5 +69,5 @@ fun PostViewDto.toUi(): PostUi = PostUi(
 )
 
 fun ProfileViewDto.toUi(): ProfileUi = ProfileUi(
-    id, username, displayName, bio, website, isPrivate, isVerified, followerCount, followingCount, postCount,
+    id, username, displayName, bio, website, avatarUrl, isPrivate, isVerified, followerCount, followingCount, postCount,
 )
