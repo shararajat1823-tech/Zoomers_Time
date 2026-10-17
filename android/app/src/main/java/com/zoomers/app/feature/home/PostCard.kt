@@ -24,13 +24,21 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.delay
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -76,7 +84,18 @@ fun PostCard(
         if (post.media.isNotEmpty()) {
             val ar = post.media.first().aspectRatio.coerceIn(0.6f, 1.25f)
             val pagerState = rememberPagerState(pageCount = { post.media.size })
-            Box {
+            var showHeart by remember(post.id) { mutableStateOf(false) }
+            LaunchedEffect(showHeart) {
+                if (showHeart) { delay(650); showHeart = false }
+            }
+            Box(
+                modifier = Modifier.pointerInput(post.id) {
+                    detectTapGestures(onDoubleTap = {
+                        if (!post.hasLiked) onLikeToggle(post)
+                        showHeart = true
+                    })
+                },
+            ) {
                 HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) { page ->
                     val media = post.media[page]
                     AsyncImage(
@@ -87,6 +106,20 @@ fun PostCard(
                             .fillMaxWidth()
                             .aspectRatio(ar)
                             .background(ZoomersTheme.colors.hairline),
+                    )
+                }
+                // Double-tap like burst.
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showHeart,
+                    enter = androidx.compose.animation.scaleIn(initialScale = 0.5f) + androidx.compose.animation.fadeIn(),
+                    exit = androidx.compose.animation.fadeOut(),
+                    modifier = Modifier.align(Alignment.Center),
+                ) {
+                    Icon(
+                        Icons.Filled.Favorite,
+                        contentDescription = null,
+                        tint = androidx.compose.ui.graphics.Color.White,
+                        modifier = Modifier.size(96.dp),
                     )
                 }
                 if (post.isCarousel) {

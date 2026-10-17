@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -44,6 +45,7 @@ import com.zoomers.app.designsystem.foundation.ZoomersLayout
 import com.zoomers.app.designsystem.theme.Spacing
 import com.zoomers.app.designsystem.theme.ZoomersTheme
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     layout: ZoomersLayout,
@@ -84,39 +86,49 @@ fun HomeScreen(
                 state.loading -> FeedSkeleton(modifier = columnMod)
                 state.error != null && state.posts.isEmpty() ->
                     ErrorState(message = state.error!!, onRetry = viewModel::refresh, modifier = columnMod.padding(top = Spacing.xxl))
-                state.posts.isEmpty() ->
-                    EmptyState(
-                        title = "Your feed is quiet",
-                        subtitle = "Follow a few creators and their posts will show up here.",
-                        modifier = columnMod.padding(top = Spacing.xxl),
-                    )
-                else -> LazyColumn(
-                    state = listState,
-                    modifier = columnMod,
-                    contentPadding = PaddingValues(bottom = Spacing.xxl),
+                else -> PullToRefreshBox(
+                    isRefreshing = state.refreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = columnMod.fillMaxSize(),
                 ) {
-                    item {
-                        ZPillTabs(
-                            options = listOf("Following", "For you"),
-                            selectedIndex = if (state.selectedTab == FeedTab.Following) 0 else 1,
-                            onSelect = { viewModel.selectTab(if (it == 0) FeedTab.Following else FeedTab.ForYou) },
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-                        )
-                    }
-                    item { StoryRow(stories = state.stories, modifier = Modifier.fillMaxWidth()) }
-                    items(state.posts, key = { it.id }) { post ->
-                        PostCard(
-                            post = post,
-                            onLikeToggle = viewModel::toggleLike,
-                            onSaveToggle = viewModel::toggleSave,
-                            onOpenProfile = onOpenProfile,
-                            onOpenComments = onOpenComments,
-                        )
-                    }
-                    if (state.loadingMore) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = Spacing.xxl),
+                    ) {
                         item {
-                            Box(Modifier.fillMaxWidth().padding(Spacing.lg), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = colors.primary, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+                            ZPillTabs(
+                                options = listOf("Following", "For you"),
+                                selectedIndex = if (state.selectedTab == FeedTab.Following) 0 else 1,
+                                onSelect = { viewModel.selectTab(if (it == 0) FeedTab.Following else FeedTab.ForYou) },
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                            )
+                        }
+                        item { StoryRow(stories = state.stories, modifier = Modifier.fillMaxWidth()) }
+                        if (state.posts.isEmpty()) {
+                            item {
+                                EmptyState(
+                                    title = "Your feed is quiet",
+                                    subtitle = "Follow a few creators — then pull down to refresh.",
+                                    modifier = Modifier.fillParentMaxWidth().padding(top = Spacing.xxl),
+                                )
+                            }
+                        } else {
+                            items(state.posts, key = { it.id }) { post ->
+                                PostCard(
+                                    post = post,
+                                    onLikeToggle = viewModel::toggleLike,
+                                    onSaveToggle = viewModel::toggleSave,
+                                    onOpenProfile = onOpenProfile,
+                                    onOpenComments = onOpenComments,
+                                )
+                            }
+                            if (state.loadingMore) {
+                                item {
+                                    Box(Modifier.fillMaxWidth().padding(Spacing.lg), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(color = colors.primary, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+                                    }
+                                }
                             }
                         }
                     }

@@ -38,8 +38,13 @@ object NetworkModule {
             .addInterceptor(authInterceptor)
             .authenticator(authenticator)
             .addInterceptor(logging)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            // The free backend sleeps when idle and takes ~30-60s to wake on the
+            // first request; generous timeouts let that first call succeed instead
+            // of failing with "couldn't reach Zoomers".
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .callTimeout(100, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
     }
 
