@@ -4,6 +4,7 @@ import com.zoomers.app.core.network.dto.AddCommentRequestDto
 import com.zoomers.app.core.network.dto.AuthResponseDto
 import com.zoomers.app.core.network.dto.CommentViewDto
 import com.zoomers.app.core.network.dto.CreatePostRequestDto
+import com.zoomers.app.core.network.dto.CreateStoryRequestDto
 import com.zoomers.app.core.network.dto.CreateUploadSessionRequestDto
 import com.zoomers.app.core.network.dto.CursorPageDto
 import com.zoomers.app.core.network.dto.FollowResultDto
@@ -20,6 +21,7 @@ import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
 import com.zoomers.app.core.network.dto.RefreshRequestDto
 import com.zoomers.app.core.network.dto.RegisterRequestDto
+import com.zoomers.app.core.network.dto.StoryTrayDto
 import com.zoomers.app.core.network.dto.UpdateProfileRequestDto
 import com.zoomers.app.core.network.dto.UploadSessionResponseDto
 import retrofit2.Response
@@ -149,6 +151,17 @@ interface ZoomersApi {
 
     @POST("notifications/read")
     suspend fun markNotificationsRead(): Response<Unit>
+
+    // ---- Stories ----
+
+    @GET("stories/feed")
+    suspend fun storyFeed(): Response<List<StoryTrayDto>>
+
+    @POST("stories")
+    suspend fun createStory(@Body body: CreateStoryRequestDto): Response<Unit>
+
+    @POST("stories/{storyId}/view")
+    suspend fun markStoryViewed(@Path("storyId") storyId: String): Response<Unit>
 
     // ---- Settings ----
 

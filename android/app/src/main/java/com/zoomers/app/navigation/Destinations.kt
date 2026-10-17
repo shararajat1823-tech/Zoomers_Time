@@ -25,6 +25,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val SAVED = "saved"
     const val HASHTAG = "hashtag"
+    const val STORY_VIEWER = "story-viewer"
 }
 
 /** The five primary destinations shown in the bottom bar / navigation rail. */

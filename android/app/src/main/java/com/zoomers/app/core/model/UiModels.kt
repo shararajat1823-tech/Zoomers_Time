@@ -7,6 +7,7 @@ import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
 import com.zoomers.app.core.network.dto.PublicProfileViewDto
 import com.zoomers.app.core.network.dto.SettingsViewDto
+import com.zoomers.app.core.network.dto.StoryTrayDto
 import com.zoomers.app.core.network.dto.UserListItemDto
 
 data class PostMediaUi(
@@ -103,6 +104,23 @@ data class SettingsUi(
     val pushMessages: Boolean,
 )
 
+data class StoryItemUi(
+    val id: String,
+    val mediaUrl: String,
+    val createdAtIso: String,
+    val viewed: Boolean,
+)
+
+data class StoryTrayUi(
+    val authorId: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String?,
+    val hasUnseen: Boolean,
+    val isSelf: Boolean,
+    val stories: List<StoryItemUi>,
+)
+
 /** Another user's profile, with the viewer's relationship for the follow button. */
 data class PublicProfileUi(
     val id: String,
@@ -166,6 +184,16 @@ fun UserListItemDto.toUi(): UserListItemUi = UserListItemUi(id, username, displa
 fun HashtagResultDto.toUi(): HashtagUi = HashtagUi(tag, usageCount)
 
 fun SettingsViewDto.toUi(): SettingsUi = SettingsUi(showOnlineStatus, pushLikes, pushComments, pushFollows, pushMessages)
+
+fun StoryTrayDto.toUi(): StoryTrayUi = StoryTrayUi(
+    authorId = author.id,
+    username = author.username,
+    displayName = author.displayName,
+    avatarUrl = author.avatarUrl,
+    hasUnseen = hasUnseen,
+    isSelf = isSelf,
+    stories = stories.map { StoryItemUi(it.id, it.mediaUrl, it.createdAt, it.viewed) },
+)
 
 fun NotificationViewDto.toUi(): NotificationUi = NotificationUi(
     id = id,

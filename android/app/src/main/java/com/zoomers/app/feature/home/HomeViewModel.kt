@@ -1,12 +1,18 @@
 package com.zoomers.app.feature.home
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zoomers.app.core.data.FeedRefreshBus
 import com.zoomers.app.core.data.FeedRepository
+import com.zoomers.app.core.data.StoryRepository
+import com.zoomers.app.core.media.ImageCompressor
 import com.zoomers.app.core.model.PostUi
+import com.zoomers.app.core.model.StoryTrayUi
 import com.zoomers.app.core.network.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +29,8 @@ data class HomeUiState(
     val refreshing: Boolean = false,
     val loadingMore: Boolean = false,
     val posts: List<PostUi> = emptyList(),
-    val stories: List<StoryUi> = emptyList(),
+    val storyTrays: List<StoryTrayUi> = emptyList(),
+    val postingStory: Boolean = false,
     val nextCursor: String? = null,
     val endReached: Boolean = false,
     val error: String? = null,
@@ -32,7 +39,9 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val feedRepository: FeedRepository,
+    private val storyRepository: StoryRepository,
     feedRefreshBus: FeedRefreshBus,
 ) : ViewModel() {
 
@@ -41,7 +50,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         refresh()
-        // Reload when a new post is created elsewhere (the create flow).
         feedRefreshBus.events.onEach { refresh() }.launchIn(viewModelScope)
     }
 
@@ -53,6 +61,7 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         _state.update { it.copy(refreshing = it.posts.isNotEmpty(), loading = it.posts.isEmpty(), error = null) }
+        loadStories()
         viewModelScope.launch {
             when (val r = feedRepository.followingFeed(cursor = null)) {
                 is ApiResult.Success -> _state.update {
@@ -60,7 +69,6 @@ class HomeViewModel @Inject constructor(
                         loading = false,
                         refreshing = false,
                         posts = r.data.items,
-                        stories = deriveStories(r.data.items),
                         nextCursor = r.data.nextCursor,
                         endReached = r.data.nextCursor == null,
                         error = null,
@@ -68,6 +76,30 @@ class HomeViewModel @Inject constructor(
                 }
                 is ApiResult.Error -> _state.update { it.copy(loading = false, refreshing = false, error = r.message) }
             }
+        }
+    }
+
+    private fun loadStories() {
+        viewModelScope.launch {
+            when (val r = storyRepository.feed()) {
+                is ApiResult.Success -> _state.update { it.copy(storyTrays = r.data) }
+                is ApiResult.Error -> Unit // stories are non-critical
+            }
+        }
+    }
+
+    fun addStory(uri: Uri?) {
+        if (uri == null || _state.value.postingStory) return
+        _state.update { it.copy(postingStory = true) }
+        viewModelScope.launch {
+            val image = ImageCompressor.fromUri(context, uri)
+            if (image == null) {
+                _state.update { it.copy(postingStory = false, error = "Couldn't read that image.") }
+                return@launch
+            }
+            storyRepository.create(image)
+            _state.update { it.copy(postingStory = false) }
+            loadStories()
         }
     }
 
@@ -116,7 +148,4 @@ class HomeViewModel @Inject constructor(
     private fun updatePost(id: String, transform: (PostUi) -> PostUi) {
         _state.update { s -> s.copy(posts = s.posts.map { if (it.id == id) transform(it) else it }) }
     }
-
-    private fun deriveStories(posts: List<PostUi>): List<StoryUi> =
-        posts.map { it.username }.distinct().take(12).map { StoryUi(it, hasUnseen = true) }
 }

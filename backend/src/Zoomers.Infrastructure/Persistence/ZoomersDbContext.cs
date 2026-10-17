@@ -6,6 +6,7 @@ using Zoomers.Domain.Identity;
 using Zoomers.Domain.Media;
 using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Posts;
+using Zoomers.Domain.Stories;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
 using Zoomers.Domain.Tags;
@@ -45,6 +46,8 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     public DbSet<Mention> Mentions => Set<Mention>();
     public DbSet<UserMute> UserMutes => Set<UserMute>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Story> Stories => Set<Story>();
+    public DbSet<StoryView> StoryViews => Set<StoryView>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

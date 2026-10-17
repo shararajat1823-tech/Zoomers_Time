@@ -3,6 +3,7 @@ using Zoomers.Domain.Engagement;
 using Zoomers.Domain.Identity;
 using Zoomers.Domain.Media;
 using Zoomers.Domain.Notifications;
+using Zoomers.Domain.Stories;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
@@ -41,6 +42,9 @@ public interface IApplicationDbContext
     DbSet<UserMute> UserMutes { get; }
 
     DbSet<Notification> Notifications { get; }
+
+    DbSet<Story> Stories { get; }
+    DbSet<StoryView> StoryViews { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

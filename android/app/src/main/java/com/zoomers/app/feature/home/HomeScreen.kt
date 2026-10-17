@@ -1,5 +1,6 @@
 package com.zoomers.app.feature.home
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,12 +54,20 @@ fun HomeScreen(
     onOpenComments: (String) -> Unit,
     onOpenMessages: () -> Unit,
     onOpenNotifications: () -> Unit,
+    onOpenStory: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val colors = ZoomersTheme.colors
     val listState = rememberLazyListState()
+
+    val storyPicker = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> viewModel.addStory(uri) }
+    fun pickStory() = storyPicker.launch(
+        androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly),
+    )
 
     // Infinite scroll: load more when within 3 items of the end.
     val shouldLoadMore by remember {
@@ -104,7 +113,15 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg, vertical = Spacing.sm),
                             )
                         }
-                        item { StoryRow(stories = state.stories, modifier = Modifier.fillMaxWidth()) }
+                        item {
+                            StoryRow(
+                                trays = state.storyTrays,
+                                myAvatarUrl = null,
+                                onAddStory = { pickStory() },
+                                onOpenTray = onOpenStory,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                         if (state.posts.isEmpty()) {
                             item {
                                 EmptyState(

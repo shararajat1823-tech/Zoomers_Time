@@ -230,6 +230,36 @@ data class NotificationViewDto(
     val read: Boolean = false,
 )
 
+// ---- Stories ----
+
+@Serializable
+data class CreateStoryRequestDto(val uploadSessionId: String)
+
+@Serializable
+data class StoryAuthorDto(
+    val id: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String? = null,
+    val isVerified: Boolean = false,
+)
+
+@Serializable
+data class StoryItemDto(
+    val id: String,
+    val mediaUrl: String,
+    val createdAt: String,
+    val viewed: Boolean = false,
+)
+
+@Serializable
+data class StoryTrayDto(
+    val author: StoryAuthorDto,
+    val stories: List<StoryItemDto> = emptyList(),
+    val hasUnseen: Boolean = false,
+    val isSelf: Boolean = false,
+)
+
 // ---- Hashtags ----
 
 @Serializable

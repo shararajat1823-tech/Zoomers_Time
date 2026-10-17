@@ -692,6 +692,60 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Stories.Story", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MediaKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId", "ExpiresAt");
+
+                    b.ToTable("Stories", (string)null);
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Stories.StoryView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ViewerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ViewerId");
+
+                    b.HasIndex("StoryId", "ViewerId")
+                        .IsUnique();
+
+                    b.ToTable("StoryViews", (string)null);
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Tags.Hashtag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1022,6 +1076,36 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.Navigation("Muter");
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Stories.Story", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Stories.StoryView", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Stories.Story", "Story")
+                        .WithMany("Views")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "Viewer")
+                        .WithMany()
+                        .HasForeignKey("ViewerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Story");
+
+                    b.Navigation("Viewer");
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Tags.Mention", b =>
                 {
                     b.HasOne("Zoomers.Domain.Identity.User", "MentionedUser")
@@ -1064,6 +1148,11 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Zoomers.Domain.Posts.Post", b =>
                 {
                     b.Navigation("Media");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Stories.Story", b =>
+                {
+                    b.Navigation("Views");
                 });
 #pragma warning restore 612, 618
         }

@@ -31,6 +31,7 @@ import com.zoomers.app.feature.profile.ProfileScreen
 import com.zoomers.app.feature.saved.SavedPostsScreen
 import com.zoomers.app.feature.search.SearchScreen
 import com.zoomers.app.feature.settings.SettingsScreen
+import com.zoomers.app.feature.story.StoryViewerScreen
 import com.zoomers.app.feature.userprofile.UserProfileScreen
 
 /**
@@ -68,6 +69,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onOpenComments = { postId -> navController.navigate("${Routes.COMMENTS}/$postId") },
                     onOpenMessages = { /* messages screen — next milestone */ },
                     onOpenNotifications = { navController.navigate(Routes.ACTIVITY) },
+                    onOpenStory = { authorId -> navController.navigate("${Routes.STORY_VIEWER}/$authorId") },
                 )
             }
             composable(Routes.SEARCH) {
@@ -152,6 +154,10 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
                     gridColumns = layout.gridColumns,
                 )
+            }
+            composable("${Routes.STORY_VIEWER}/{authorId}") { entry ->
+                val authorId = entry.arguments?.getString("authorId").orEmpty()
+                StoryViewerScreen(startAuthorId = authorId, onClose = { navController.popBackStack() })
             }
         }
     }
