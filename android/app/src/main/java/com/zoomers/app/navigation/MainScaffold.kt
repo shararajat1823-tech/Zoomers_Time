@@ -21,6 +21,7 @@ import com.zoomers.app.designsystem.component.ZBottomBar
 import com.zoomers.app.designsystem.component.ZNavRail
 import com.zoomers.app.designsystem.foundation.rememberZoomersLayout
 import com.zoomers.app.feature.create.CreatePostScreen
+import com.zoomers.app.feature.detail.PostDetailScreen
 import com.zoomers.app.feature.home.HomeScreen
 import com.zoomers.app.feature.profile.ProfileScreen
 
@@ -73,7 +74,16 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                 CreatePostScreen(onPosted = goHome, onCancel = goHome)
             }
             composable(Routes.REELS) { PlaceholderScreen("Reels") }
-            composable(Routes.PROFILE) { ProfileScreen(gridColumns = layout.gridColumns) }
+            composable(Routes.PROFILE) {
+                ProfileScreen(
+                    gridColumns = layout.gridColumns,
+                    onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                )
+            }
+            composable("${Routes.POST}/{postId}") { entry ->
+                val postId = entry.arguments?.getString("postId").orEmpty()
+                PostDetailScreen(postId = postId, onBack = { navController.popBackStack() })
+            }
         }
     }
 

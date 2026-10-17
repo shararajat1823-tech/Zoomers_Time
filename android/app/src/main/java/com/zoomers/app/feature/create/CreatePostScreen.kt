@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,8 +43,9 @@ import com.zoomers.app.designsystem.theme.Spacing
 import com.zoomers.app.designsystem.theme.ZoomersTheme
 
 /**
- * New-post composer: pick a photo, add a caption, choose who can see it, share.
- * Responsive — the content column is width-capped and centred on larger screens.
+ * New-post composer: pick one or more photos, add a caption, choose who can see
+ * it, share. Responsive — the content column is width-capped and centred on
+ * larger screens.
  */
 @Composable
 fun CreatePostScreen(
@@ -55,8 +58,8 @@ fun CreatePostScreen(
     val colors = ZoomersTheme.colors
 
     val picker = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> viewModel.onImagePicked(uri) }
+        ActivityResultContracts.PickMultipleVisualMedia(MaxPostImages),
+    ) { uris -> viewModel.onImagesPicked(uris) }
 
     fun launchPicker() =
         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -93,11 +96,11 @@ fun CreatePostScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = colors.text,
                 )
-                // Spacer balance so the title stays centred.
                 Text("Cancel", color = androidx.compose.ui.graphics.Color.Transparent)
             }
 
             // Photo picker / preview
+            val uris = state.imageUris
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,23 +110,48 @@ fun CreatePostScreen(
                     .clickable(enabled = !state.submitting) { launchPicker() },
                 contentAlignment = Alignment.Center,
             ) {
-                if (state.imageUri != null) {
-                    AsyncImage(
-                        model = state.imageUri,
-                        contentDescription = "Selected photo",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                if (uris.isNotEmpty()) {
+                    val pagerState = rememberPagerState(pageCount = { uris.size })
+                    HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                        AsyncImage(
+                            model = uris[page],
+                            contentDescription = "Selected photo ${page + 1}",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    if (uris.size > 1) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(Spacing.md)
+                                .clip(RoundedCornerShape(50))
+                                .background(colors.text.copy(alpha = 0.65f))
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                "${pagerState.currentPage + 1}/${uris.size}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colors.background,
+                            )
+                        }
+                    }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                         Text("＋", style = MaterialTheme.typography.displaySmall, color = colors.primary)
-                        Text("Tap to choose a photo", style = MaterialTheme.typography.bodyMedium, color = colors.textMuted)
+                        Text("Tap to choose photos", style = MaterialTheme.typography.bodyMedium, color = colors.textMuted)
+                        Text("Up to $MaxPostImages", style = MaterialTheme.typography.bodySmall, color = colors.textMuted)
                     }
                 }
             }
 
-            if (state.imageUri != null && !state.submitting) {
-                ZTextLink(text = "Change photo", onClick = { launchPicker() })
+            if (uris.isNotEmpty() && !state.submitting) {
+                Text(
+                    if (uris.size == 1) "1 photo selected · tap to change" else "${uris.size} photos selected · tap to change",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textMuted,
+                )
+                ZTextLink(text = "Change photos", onClick = { launchPicker() })
             }
 
             // Caption

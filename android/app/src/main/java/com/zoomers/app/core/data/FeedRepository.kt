@@ -1,6 +1,7 @@
 package com.zoomers.app.core.data
 
 import com.zoomers.app.core.model.FeedPage
+import com.zoomers.app.core.model.PostUi
 import com.zoomers.app.core.model.toUi
 import com.zoomers.app.core.network.ApiResult
 import com.zoomers.app.core.network.ZoomersApi
@@ -17,6 +18,12 @@ class FeedRepository @Inject constructor(
             is ApiResult.Success -> ApiResult.Success(
                 FeedPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
             )
+            is ApiResult.Error -> r
+        }
+
+    suspend fun post(postId: String): ApiResult<PostUi> =
+        when (val r = safeApiCall { api.getPost(postId) }) {
+            is ApiResult.Success -> ApiResult.Success(r.data.toUi())
             is ApiResult.Error -> r
         }
 

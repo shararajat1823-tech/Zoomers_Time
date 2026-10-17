@@ -1,6 +1,7 @@
 package com.zoomers.app.feature.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,11 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Collections
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +48,7 @@ import com.zoomers.app.designsystem.theme.tintFor
 @Composable
 fun ProfileScreen(
     gridColumns: Int = 3,
+    onOpenPost: (String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -58,6 +64,7 @@ fun ProfileScreen(
                 posts = state.posts,
                 gridColumns = gridColumns,
                 onLogout = viewModel::logout,
+                onOpenPost = onOpenPost,
             )
             else -> EmptyState("No profile")
         }
@@ -65,7 +72,13 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(profile: ProfileUi, posts: List<PostUi>, gridColumns: Int, onLogout: () -> Unit) {
+private fun ProfileContent(
+    profile: ProfileUi,
+    posts: List<PostUi>,
+    gridColumns: Int,
+    onLogout: () -> Unit,
+    onOpenPost: (String) -> Unit,
+) {
     val colors = ZoomersTheme.colors
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridColumns),
@@ -103,7 +116,8 @@ private fun ProfileContent(profile: ProfileUi, posts: List<PostUi>, gridColumns:
                 Modifier
                     .padding(1.dp)
                     .aspectRatio(1f)
-                    .background(tintFor(post.id)),
+                    .background(tintFor(post.id))
+                    .clickable { onOpenPost(post.id) },
             ) {
                 if (imageUrl != null) {
                     AsyncImage(
@@ -111,6 +125,14 @@ private fun ProfileContent(profile: ProfileUi, posts: List<PostUi>, gridColumns:
                         contentDescription = post.caption,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                if (post.isCarousel) {
+                    Icon(
+                        imageVector = Icons.Outlined.Collections,
+                        contentDescription = "Multiple photos",
+                        tint = ZoomersTheme.colors.background,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(18.dp),
                     )
                 }
             }

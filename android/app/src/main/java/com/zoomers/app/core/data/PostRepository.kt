@@ -27,11 +27,12 @@ data class NewPostImage(
 )
 
 /**
- * Creates posts. The flow mirrors the backend's direct-to-storage design:
+ * Creates posts. The flow mirrors the backend's direct-to-storage design, per
+ * image:
  *  1. open an upload session (gets a short-lived presigned upload URL),
  *  2. PUT the bytes straight to object storage (not through the API),
  *  3. mark the session complete (server verifies size/type),
- *  4. create the post referencing the session.
+ * then create one post referencing all the uploaded media (1–10 items).
  */
 @Singleton
 class PostRepository @Inject constructor(
@@ -46,50 +47,55 @@ class PostRepository @Inject constructor(
         .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
-    suspend fun createImagePost(
-        image: NewPostImage,
+    suspend fun createImagesPost(
+        images: List<NewPostImage>,
         caption: String?,
         visibility: Int,
     ): ApiResult<PostUi> {
-        // 1. Upload session.
-        val session = when (val r = safeApiCall {
-            api.createUploadSession(CreateUploadSessionRequestDto("PostMedia", image.contentType))
-        }) {
-            is ApiResult.Success -> r.data
-            is ApiResult.Error -> return r
+        if (images.isEmpty()) return ApiResult.Error("Pick at least one photo to share.")
+
+        val mediaItems = ArrayList<CreatePostMediaItemDto>(images.size)
+        for (image in images) {
+            // 1. Upload session.
+            val session = when (val r = safeApiCall {
+                api.createUploadSession(CreateUploadSessionRequestDto("PostMedia", image.contentType))
+            }) {
+                is ApiResult.Success -> r.data
+                is ApiResult.Error -> return r
+            }
+
+            // 2. PUT the bytes to the presigned URL.
+            val uploaded = withContext(Dispatchers.IO) {
+                runCatching {
+                    val request = Request.Builder()
+                        .url(session.uploadUrl)
+                        .put(image.bytes.toRequestBody(image.contentType.toMediaType()))
+                        .build()
+                    uploadClient.newCall(request).execute().use { it.isSuccessful }
+                }.getOrDefault(false)
+            }
+            if (!uploaded) {
+                return ApiResult.Error("Couldn't upload a photo. Please check your connection and try again.")
+            }
+
+            // 3. Complete (server-side verification).
+            when (val r = safeApiCall { api.completeUploadSession(session.sessionId) }) {
+                is ApiResult.Success -> Unit
+                is ApiResult.Error -> return r
+            }
+
+            mediaItems += CreatePostMediaItemDto(
+                uploadSessionId = session.sessionId,
+                width = image.width,
+                height = image.height,
+            )
         }
 
-        // 2. PUT the bytes to the presigned URL.
-        val uploaded = withContext(Dispatchers.IO) {
-            runCatching {
-                val request = Request.Builder()
-                    .url(session.uploadUrl)
-                    .put(image.bytes.toRequestBody(image.contentType.toMediaType()))
-                    .build()
-                uploadClient.newCall(request).execute().use { it.isSuccessful }
-            }.getOrDefault(false)
-        }
-        if (!uploaded) {
-            return ApiResult.Error("Couldn't upload the photo. Please check your connection and try again.")
-        }
-
-        // 3. Complete (server-side verification).
-        when (val r = safeApiCall { api.completeUploadSession(session.sessionId) }) {
-            is ApiResult.Success -> Unit
-            is ApiResult.Error -> return r
-        }
-
-        // 4. Create the post.
+        // Create the post referencing all uploaded media.
         val body = CreatePostRequestDto(
             caption = caption?.trim()?.ifBlank { null },
             visibility = visibility,
-            media = listOf(
-                CreatePostMediaItemDto(
-                    uploadSessionId = session.sessionId,
-                    width = image.width,
-                    height = image.height,
-                ),
-            ),
+            media = mediaItems,
         )
         return when (val r = safeApiCall { api.createPost(body) }) {
             is ApiResult.Success -> {

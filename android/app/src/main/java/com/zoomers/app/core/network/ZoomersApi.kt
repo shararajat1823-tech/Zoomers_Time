@@ -51,6 +51,9 @@ interface ZoomersApi {
         @Query("limit") limit: Int,
     ): Response<CursorPageDto<PostViewDto>>
 
+    @GET("posts/{postId}")
+    suspend fun getPost(@Path("postId") postId: String): Response<PostViewDto>
+
     @POST("posts/{postId}/likes")
     suspend fun likePost(@Path("postId") postId: String): Response<LikeStateDto>
 

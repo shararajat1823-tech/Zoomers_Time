@@ -17,6 +17,7 @@ object Routes {
     const val CREATE = "create"
     const val REELS = "reels"
     const val PROFILE = "profile"
+    const val POST = "post"
 }
 
 /** The five primary destinations shown in the bottom bar / navigation rail. */
