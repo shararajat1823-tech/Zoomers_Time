@@ -1,6 +1,7 @@
 package com.zoomers.app.core.model
 
 import com.zoomers.app.core.network.dto.CommentViewDto
+import com.zoomers.app.core.network.dto.NotificationViewDto
 import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
 import com.zoomers.app.core.network.dto.PublicProfileViewDto
@@ -71,6 +72,22 @@ data class UserListItemUi(
 
 data class UserListPage(val items: List<UserListItemUi>, val nextCursor: String?)
 
+enum class ActivityType { Like, Comment, Follow, FollowRequest, Unknown }
+
+data class NotificationUi(
+    val id: String,
+    val type: ActivityType,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String?,
+    val postId: String?,
+    val postThumbnailUrl: String?,
+    val createdAtIso: String,
+    val read: Boolean,
+)
+
+data class NotificationPage(val items: List<NotificationUi>, val nextCursor: String?)
+
 /** Another user's profile, with the viewer's relationship for the follow button. */
 data class PublicProfileUi(
     val id: String,
@@ -129,6 +146,24 @@ fun CommentViewDto.toUi(): CommentUi = CommentUi(
 )
 
 fun UserListItemDto.toUi(): UserListItemUi = UserListItemUi(id, username, displayName, isVerified, isPrivate)
+
+fun NotificationViewDto.toUi(): NotificationUi = NotificationUi(
+    id = id,
+    type = when (type) {
+        0 -> ActivityType.Like
+        1 -> ActivityType.Comment
+        2 -> ActivityType.Follow
+        3 -> ActivityType.FollowRequest
+        else -> ActivityType.Unknown
+    },
+    username = actor.username,
+    displayName = actor.displayName,
+    avatarUrl = actor.avatarUrl,
+    postId = postId,
+    postThumbnailUrl = postThumbnailUrl,
+    createdAtIso = createdAt,
+    read = read,
+)
 
 fun PublicProfileViewDto.toUi(): PublicProfileUi = PublicProfileUi(
     id = id,

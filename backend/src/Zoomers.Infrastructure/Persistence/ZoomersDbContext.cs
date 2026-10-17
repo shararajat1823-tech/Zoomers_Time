@@ -4,6 +4,7 @@ using Zoomers.Domain.Common;
 using Zoomers.Domain.Engagement;
 using Zoomers.Domain.Identity;
 using Zoomers.Domain.Media;
+using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
@@ -43,6 +44,7 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     public DbSet<PostHashtag> PostHashtags => Set<PostHashtag>();
     public DbSet<Mention> Mentions => Set<Mention>();
     public DbSet<UserMute> UserMutes => Set<UserMute>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

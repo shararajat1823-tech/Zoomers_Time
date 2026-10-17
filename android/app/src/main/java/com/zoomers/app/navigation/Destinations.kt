@@ -21,6 +21,7 @@ object Routes {
     const val EDIT_PROFILE = "edit-profile"
     const val USER = "user"
     const val COMMENTS = "comments"
+    const val ACTIVITY = "activity"
 }
 
 /** The five primary destinations shown in the bottom bar / navigation rail. */

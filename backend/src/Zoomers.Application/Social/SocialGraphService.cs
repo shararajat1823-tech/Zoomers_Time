@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zoomers.Application.Abstractions;
 using Zoomers.Application.Social.Dtos;
+using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
 using Zoomers.Shared.Pagination;
@@ -55,6 +56,13 @@ public sealed class SocialGraphService : ISocialGraphService
                 Status = FollowRequestStatus.Pending,
                 CreatedAt = _clock.UtcNow
             });
+            _db.Notifications.Add(new Notification
+            {
+                RecipientId = targetUserId,
+                ActorId = actorId,
+                Type = NotificationType.FollowRequest,
+                CreatedAt = _clock.UtcNow
+            });
             await _db.SaveChangesAsync(ct);
             return Result.Success(new FollowResult(FollowOutcome.Requested));
         }
@@ -63,6 +71,13 @@ public sealed class SocialGraphService : ISocialGraphService
         {
             _db.Follows.Add(new Follow { FollowerId = actorId, FolloweeId = targetUserId, CreatedAt = _clock.UtcNow });
             await AdjustCountsAsync(followerId: actorId, followeeId: targetUserId, delta: +1, token);
+            _db.Notifications.Add(new Notification
+            {
+                RecipientId = targetUserId,
+                ActorId = actorId,
+                Type = NotificationType.Follow,
+                CreatedAt = _clock.UtcNow
+            });
             await _db.SaveChangesAsync(token);
         }, ct);
 

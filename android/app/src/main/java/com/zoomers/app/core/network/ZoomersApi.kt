@@ -8,6 +8,7 @@ import com.zoomers.app.core.network.dto.CreateUploadSessionRequestDto
 import com.zoomers.app.core.network.dto.CursorPageDto
 import com.zoomers.app.core.network.dto.FollowResultDto
 import com.zoomers.app.core.network.dto.LikeStateDto
+import com.zoomers.app.core.network.dto.NotificationViewDto
 import com.zoomers.app.core.network.dto.PublicProfileViewDto
 import com.zoomers.app.core.network.dto.UserListItemDto
 import com.zoomers.app.core.network.dto.LoginRequestDto
@@ -108,6 +109,17 @@ interface ZoomersApi {
 
     @GET("users/{username}")
     suspend fun userByUsername(@Path("username") username: String): Response<PublicProfileViewDto>
+
+    // ---- Notifications ----
+
+    @GET("notifications")
+    suspend fun notifications(
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<NotificationViewDto>>
+
+    @POST("notifications/read")
+    suspend fun markNotificationsRead(): Response<Unit>
 
     @POST("users/{userId}/follow")
     suspend fun follow(@Path("userId") userId: String): Response<FollowResultDto>

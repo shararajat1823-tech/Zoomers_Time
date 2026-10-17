@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Zoomers.Domain.Engagement;
 using Zoomers.Domain.Identity;
 using Zoomers.Domain.Media;
+using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
@@ -38,6 +39,8 @@ public interface IApplicationDbContext
     DbSet<PostHashtag> PostHashtags { get; }
     DbSet<Mention> Mentions { get; }
     DbSet<UserMute> UserMutes { get; }
+
+    DbSet<Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

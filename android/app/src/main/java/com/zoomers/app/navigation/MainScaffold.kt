@@ -20,6 +20,7 @@ import com.zoomers.app.designsystem.component.NavItem
 import com.zoomers.app.designsystem.component.ZBottomBar
 import com.zoomers.app.designsystem.component.ZNavRail
 import com.zoomers.app.designsystem.foundation.rememberZoomersLayout
+import com.zoomers.app.feature.activity.ActivityScreen
 import com.zoomers.app.feature.comments.CommentsScreen
 import com.zoomers.app.feature.create.CreatePostScreen
 import com.zoomers.app.feature.detail.PostDetailScreen
@@ -63,7 +64,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onOpenProfile = { username -> navController.navigate("${Routes.USER}/$username") },
                     onOpenComments = { postId -> navController.navigate("${Routes.COMMENTS}/$postId") },
                     onOpenMessages = { /* messages screen — next milestone */ },
-                    onOpenNotifications = { /* notifications screen — next milestone */ },
+                    onOpenNotifications = { navController.navigate(Routes.ACTIVITY) },
                 )
             }
             composable(Routes.SEARCH) {
@@ -114,6 +115,13 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
             composable("${Routes.COMMENTS}/{postId}") { entry ->
                 val postId = entry.arguments?.getString("postId").orEmpty()
                 CommentsScreen(postId = postId, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ACTIVITY) {
+                ActivityScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") },
+                )
             }
         }
     }

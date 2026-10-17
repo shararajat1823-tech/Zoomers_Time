@@ -208,6 +208,28 @@ data class PublicProfileViewDto(
 @Serializable
 data class FollowResultDto(val outcome: Int) // 0 Following, 1 Requested, 2 AlreadyFollowing, 3 AlreadyRequested
 
+// ---- Notifications / activity ----
+
+@Serializable
+data class NotificationActorDto(
+    val id: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String? = null,
+    val isVerified: Boolean = false,
+)
+
+@Serializable
+data class NotificationViewDto(
+    val id: String,
+    val type: Int, // 0 Like, 1 Comment, 2 Follow, 3 FollowRequest
+    val actor: NotificationActorDto,
+    val postId: String? = null,
+    val postThumbnailUrl: String? = null,
+    val createdAt: String,
+    val read: Boolean = false,
+)
+
 /** RFC 7807 problem response surfaced by the API on errors. */
 @Serializable
 data class ProblemDto(

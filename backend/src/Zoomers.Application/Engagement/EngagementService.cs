@@ -4,6 +4,7 @@ using Zoomers.Application.Engagement.Dtos;
 using Zoomers.Application.Posts;
 using Zoomers.Application.Posts.Dtos;
 using Zoomers.Domain.Engagement;
+using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
 using Zoomers.Shared.Pagination;
@@ -42,6 +43,17 @@ public sealed class EngagementService : IEngagementService
             {
                 _db.PostLikes.Add(new PostLike { PostId = postId, UserId = userId, CreatedAt = _clock.UtcNow });
                 post.LikeCount += 1;
+                if (post.AuthorId != userId)
+                {
+                    _db.Notifications.Add(new Notification
+                    {
+                        RecipientId = post.AuthorId,
+                        ActorId = userId,
+                        Type = NotificationType.Like,
+                        PostId = postId,
+                        CreatedAt = _clock.UtcNow,
+                    });
+                }
                 await _db.SaveChangesAsync(token);
             }, ct);
         }
@@ -136,6 +148,18 @@ public sealed class EngagementService : IEngagementService
         {
             _db.Comments.Add(comment);
             post.CommentCount += 1;
+            if (post.AuthorId != userId)
+            {
+                _db.Notifications.Add(new Notification
+                {
+                    RecipientId = post.AuthorId,
+                    ActorId = userId,
+                    Type = NotificationType.Comment,
+                    PostId = postId,
+                    CommentId = comment.Id,
+                    CreatedAt = _clock.UtcNow,
+                });
+            }
             await _db.SaveChangesAsync(token);
         }, ct);
 
