@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Zoomers.Domain.Engagement;
 using Zoomers.Domain.Identity;
 using Zoomers.Domain.Media;
+using Zoomers.Domain.Messaging;
 using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Stories;
 using Zoomers.Domain.Posts;
@@ -45,6 +46,9 @@ public interface IApplicationDbContext
 
     DbSet<Story> Stories { get; }
     DbSet<StoryView> StoryViews { get; }
+
+    DbSet<Conversation> Conversations { get; }
+    DbSet<Message> Messages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

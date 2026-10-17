@@ -318,6 +318,79 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.ToTable("UploadSessions", (string)null);
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Messaging.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastMessagePreview")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("ParticipantAId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ParticipantBId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastMessageAt");
+
+                    b.HasIndex("ParticipantAId");
+
+                    b.HasIndex("ParticipantBId");
+
+                    b.HasIndex("ParticipantAId", "ParticipantBId")
+                        .IsUnique();
+
+                    b.ToTable("Conversations", (string)null);
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Messaging.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("ConversationId", "CreatedAt");
+
+                    b.HasIndex("ConversationId", "SenderId", "ReadAt");
+
+                    b.ToTable("Messages", (string)null);
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -937,6 +1010,44 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Messaging.Conversation", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "ParticipantA")
+                        .WithMany()
+                        .HasForeignKey("ParticipantAId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "ParticipantB")
+                        .WithMany()
+                        .HasForeignKey("ParticipantBId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParticipantA");
+
+                    b.Navigation("ParticipantB");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Messaging.Message", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Messaging.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Notifications.Notification", b =>
                 {
                     b.HasOne("Zoomers.Domain.Identity.User", "Actor")
@@ -1143,6 +1254,11 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("Settings");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Messaging.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Zoomers.Domain.Posts.Post", b =>

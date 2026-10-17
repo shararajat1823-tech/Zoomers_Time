@@ -27,6 +27,13 @@ public static class TestClientExtensions
         return client.SendAsync(req);
     }
 
+    public static Task<HttpResponseMessage> PostAuthAsync<T>(this HttpClient client, string url, string token, T body)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, url).WithAuth(token);
+        req.Content = JsonContent.Create(body);
+        return client.SendAsync(req);
+    }
+
     public static Task<HttpResponseMessage> DeleteAuthAsync(this HttpClient client, string url, string token)
     {
         var req = new HttpRequestMessage(HttpMethod.Delete, url).WithAuth(token);
