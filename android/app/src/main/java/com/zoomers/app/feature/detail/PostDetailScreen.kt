@@ -37,6 +37,7 @@ fun PostDetailScreen(
     postId: String,
     onBack: () -> Unit,
     onOpenProfile: (String) -> Unit = {},
+    onOpenComments: (String) -> Unit = {},
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -90,7 +91,7 @@ fun PostDetailScreen(
                         onLikeToggle = viewModel::toggleLike,
                         onSaveToggle = viewModel::toggleSave,
                         onOpenProfile = onOpenProfile,
-                        onOpenComments = { /* comments screen — a later milestone */ },
+                        onOpenComments = onOpenComments,
                     )
                 }
             }

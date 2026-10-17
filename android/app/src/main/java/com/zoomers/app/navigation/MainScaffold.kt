@@ -20,11 +20,14 @@ import com.zoomers.app.designsystem.component.NavItem
 import com.zoomers.app.designsystem.component.ZBottomBar
 import com.zoomers.app.designsystem.component.ZNavRail
 import com.zoomers.app.designsystem.foundation.rememberZoomersLayout
+import com.zoomers.app.feature.comments.CommentsScreen
 import com.zoomers.app.feature.create.CreatePostScreen
 import com.zoomers.app.feature.detail.PostDetailScreen
 import com.zoomers.app.feature.editprofile.EditProfileScreen
 import com.zoomers.app.feature.home.HomeScreen
 import com.zoomers.app.feature.profile.ProfileScreen
+import com.zoomers.app.feature.search.SearchScreen
+import com.zoomers.app.feature.userprofile.UserProfileScreen
 
 /**
  * Hosts the five primary destinations. Adapts navigation to the window size: a
@@ -57,13 +60,15 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
             composable(Routes.HOME) {
                 HomeScreen(
                     layout = layout,
-                    onOpenProfile = { navController.navigate(Routes.PROFILE) },
-                    onOpenComments = { /* comments screen — next milestone */ },
+                    onOpenProfile = { username -> navController.navigate("${Routes.USER}/$username") },
+                    onOpenComments = { postId -> navController.navigate("${Routes.COMMENTS}/$postId") },
                     onOpenMessages = { /* messages screen — next milestone */ },
                     onOpenNotifications = { /* notifications screen — next milestone */ },
                 )
             }
-            composable(Routes.SEARCH) { PlaceholderScreen("Search & Explore") }
+            composable(Routes.SEARCH) {
+                SearchScreen(onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") })
+            }
             composable(Routes.CREATE) {
                 val goHome: () -> Unit = {
                     navController.navigate(Routes.HOME) {
@@ -84,13 +89,31 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
             }
             composable("${Routes.POST}/{postId}") { entry ->
                 val postId = entry.arguments?.getString("postId").orEmpty()
-                PostDetailScreen(postId = postId, onBack = { navController.popBackStack() })
+                PostDetailScreen(
+                    postId = postId,
+                    onBack = { navController.popBackStack() },
+                    onOpenProfile = { username -> navController.navigate("${Routes.USER}/$username") },
+                    onOpenComments = { id -> navController.navigate("${Routes.COMMENTS}/$id") },
+                )
             }
             composable(Routes.EDIT_PROFILE) {
                 EditProfileScreen(
                     onSaved = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() },
                 )
+            }
+            composable("${Routes.USER}/{username}") { entry ->
+                val username = entry.arguments?.getString("username").orEmpty()
+                UserProfileScreen(
+                    username = username,
+                    onBack = { navController.popBackStack() },
+                    gridColumns = layout.gridColumns,
+                    onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                )
+            }
+            composable("${Routes.COMMENTS}/{postId}") { entry ->
+                val postId = entry.arguments?.getString("postId").orEmpty()
+                CommentsScreen(postId = postId, onBack = { navController.popBackStack() })
             }
         }
     }

@@ -149,6 +149,65 @@ data class CreatePostRequestDto(
     val media: List<CreatePostMediaItemDto>,
 )
 
+// ---- Comments ----
+
+@Serializable
+data class CommentViewDto(
+    val id: String,
+    val author: PostAuthorDto,
+    val body: String,
+    val parentCommentId: String? = null,
+    val createdAt: String,
+    val likeCount: Int = 0,
+    val replyCount: Int = 0,
+    val viewerHasLiked: Boolean = false,
+)
+
+@Serializable
+data class AddCommentRequestDto(val body: String, val parentCommentId: String? = null)
+
+// ---- Users / social ----
+
+@Serializable
+data class UserListItemDto(
+    val id: String,
+    val username: String,
+    val displayName: String,
+    val isVerified: Boolean = false,
+    val isPrivate: Boolean = false,
+)
+
+@Serializable
+data class RelationshipStateDto(
+    val isSelf: Boolean = false,
+    val isFollowing: Boolean = false,
+    val isFollowedBy: Boolean = false,
+    val hasOutgoingRequest: Boolean = false,
+    val hasIncomingRequest: Boolean = false,
+    val isBlocking: Boolean = false,
+    val isBlockedBy: Boolean = false,
+)
+
+@Serializable
+data class PublicProfileViewDto(
+    val id: String,
+    val username: String,
+    val displayName: String,
+    val bio: String? = null,
+    val website: String? = null,
+    val avatarUrl: String? = null,
+    val isVerified: Boolean = false,
+    val isPrivate: Boolean = false,
+    val followerCount: Int = 0,
+    val followingCount: Int = 0,
+    val postCount: Int = 0,
+    val relationship: RelationshipStateDto = RelationshipStateDto(),
+    val canViewPosts: Boolean = false,
+)
+
+@Serializable
+data class FollowResultDto(val outcome: Int) // 0 Following, 1 Requested, 2 AlreadyFollowing, 3 AlreadyRequested
+
 /** RFC 7807 problem response surfaced by the API on errors. */
 @Serializable
 data class ProblemDto(

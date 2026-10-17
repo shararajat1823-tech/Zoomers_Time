@@ -1,10 +1,15 @@
 package com.zoomers.app.core.network
 
+import com.zoomers.app.core.network.dto.AddCommentRequestDto
 import com.zoomers.app.core.network.dto.AuthResponseDto
+import com.zoomers.app.core.network.dto.CommentViewDto
 import com.zoomers.app.core.network.dto.CreatePostRequestDto
 import com.zoomers.app.core.network.dto.CreateUploadSessionRequestDto
 import com.zoomers.app.core.network.dto.CursorPageDto
+import com.zoomers.app.core.network.dto.FollowResultDto
 import com.zoomers.app.core.network.dto.LikeStateDto
+import com.zoomers.app.core.network.dto.PublicProfileViewDto
+import com.zoomers.app.core.network.dto.UserListItemDto
 import com.zoomers.app.core.network.dto.LoginRequestDto
 import com.zoomers.app.core.network.dto.LogoutRequestDto
 import com.zoomers.app.core.network.dto.PostViewDto
@@ -70,6 +75,45 @@ interface ZoomersApi {
 
     @DELETE("posts/{postId}/save")
     suspend fun unsavePost(@Path("postId") postId: String): Response<Unit>
+
+    // ---- Comments ----
+
+    @GET("posts/{postId}/comments")
+    suspend fun comments(
+        @Path("postId") postId: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<CommentViewDto>>
+
+    @POST("posts/{postId}/comments")
+    suspend fun addComment(
+        @Path("postId") postId: String,
+        @Body body: AddCommentRequestDto,
+    ): Response<CommentViewDto>
+
+    // ---- Users / social ----
+
+    @GET("search/users")
+    suspend fun searchUsers(
+        @Query("q") query: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<UserListItemDto>>
+
+    @GET("search/suggested-users")
+    suspend fun suggestedUsers(
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<UserListItemDto>>
+
+    @GET("users/{username}")
+    suspend fun userByUsername(@Path("username") username: String): Response<PublicProfileViewDto>
+
+    @POST("users/{userId}/follow")
+    suspend fun follow(@Path("userId") userId: String): Response<FollowResultDto>
+
+    @DELETE("users/{userId}/follow")
+    suspend fun unfollow(@Path("userId") userId: String): Response<Unit>
 
     // ---- Media upload + post creation ----
 
