@@ -1,7 +1,9 @@
 package com.zoomers.app.core.model
 
 import com.zoomers.app.core.network.dto.CommentViewDto
+import com.zoomers.app.core.network.dto.ConversationDto
 import com.zoomers.app.core.network.dto.HashtagResultDto
+import com.zoomers.app.core.network.dto.MessageDto
 import com.zoomers.app.core.network.dto.NotificationViewDto
 import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
@@ -229,4 +231,54 @@ fun PublicProfileViewDto.toUi(): PublicProfileUi = PublicProfileUi(
     isFollowing = relationship.isFollowing,
     hasOutgoingRequest = relationship.hasOutgoingRequest,
     canViewPosts = canViewPosts,
+)
+
+// ---- Direct messages ----
+
+data class ConversationUi(
+    val id: String,
+    val otherUserId: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String?,
+    val isVerified: Boolean,
+    val lastMessagePreview: String?,
+    val lastMessageAtIso: String,
+    val unreadCount: Int,
+)
+
+data class ConversationPage(val items: List<ConversationUi>, val nextCursor: String?)
+
+data class MessageUi(
+    val id: String,
+    val conversationId: String,
+    val senderId: String,
+    val body: String,
+    val createdAtIso: String,
+    val read: Boolean,
+    val isMine: Boolean,
+)
+
+data class MessagePage(val items: List<MessageUi>, val nextCursor: String?)
+
+fun ConversationDto.toUi(): ConversationUi = ConversationUi(
+    id = id,
+    otherUserId = otherUser.id,
+    username = otherUser.username,
+    displayName = otherUser.displayName,
+    avatarUrl = otherUser.avatarUrl,
+    isVerified = otherUser.isVerified,
+    lastMessagePreview = lastMessagePreview,
+    lastMessageAtIso = lastMessageAt,
+    unreadCount = unreadCount,
+)
+
+fun MessageDto.toUi(): MessageUi = MessageUi(
+    id = id,
+    conversationId = conversationId,
+    senderId = senderId,
+    body = body,
+    createdAtIso = createdAt,
+    read = readAt != null,
+    isMine = isMine,
 )

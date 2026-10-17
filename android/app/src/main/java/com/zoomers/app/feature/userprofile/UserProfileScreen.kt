@@ -56,6 +56,7 @@ fun UserProfileScreen(
     onBack: () -> Unit,
     gridColumns: Int = 3,
     onOpenPost: (String) -> Unit = {},
+    onMessage: (userId: String) -> Unit = {},
     viewModel: UserProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -93,6 +94,7 @@ fun UserProfileScreen(
                     followBusy = state.followBusy,
                     onToggleFollow = viewModel::toggleFollow,
                     onOpenPost = onOpenPost,
+                    onMessage = onMessage,
                 )
             }
         }
@@ -107,6 +109,7 @@ private fun Content(
     followBusy: Boolean,
     onToggleFollow: () -> Unit,
     onOpenPost: (String) -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     val colors = ZoomersTheme.colors
     LazyVerticalGrid(
@@ -137,10 +140,13 @@ private fun Content(
                         profile.hasOutgoingRequest -> "Requested"
                         else -> "Follow"
                     }
-                    if (profile.isFollowing || profile.hasOutgoingRequest) {
-                        ZSecondaryButton(label, onClick = onToggleFollow, modifier = Modifier.fillMaxWidth())
-                    } else {
-                        ZPillButton(label, onClick = onToggleFollow, modifier = Modifier.fillMaxWidth())
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        if (profile.isFollowing || profile.hasOutgoingRequest) {
+                            ZSecondaryButton(label, onClick = onToggleFollow, modifier = Modifier.weight(1f))
+                        } else {
+                            ZPillButton(label, onClick = onToggleFollow, modifier = Modifier.weight(1f))
+                        }
+                        ZSecondaryButton("Message", onClick = { onMessage(profile.id) }, modifier = Modifier.weight(1f))
                     }
                 }
                 Spacer(Modifier.height(Spacing.md))

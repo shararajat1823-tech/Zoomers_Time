@@ -27,6 +27,8 @@ import com.zoomers.app.feature.detail.PostDetailScreen
 import com.zoomers.app.feature.editprofile.EditProfileScreen
 import com.zoomers.app.feature.hashtag.HashtagScreen
 import com.zoomers.app.feature.home.HomeScreen
+import com.zoomers.app.feature.messages.ChatScreen
+import com.zoomers.app.feature.messages.InboxScreen
 import com.zoomers.app.feature.profile.ProfileScreen
 import com.zoomers.app.feature.saved.SavedPostsScreen
 import com.zoomers.app.feature.search.SearchScreen
@@ -67,7 +69,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     layout = layout,
                     onOpenProfile = { username -> navController.navigate("${Routes.USER}/$username") },
                     onOpenComments = { postId -> navController.navigate("${Routes.COMMENTS}/$postId") },
-                    onOpenMessages = { /* messages screen — next milestone */ },
+                    onOpenMessages = { navController.navigate(Routes.INBOX) },
                     onOpenNotifications = { navController.navigate(Routes.ACTIVITY) },
                     onOpenStory = { authorId -> navController.navigate("${Routes.STORY_VIEWER}/$authorId") },
                 )
@@ -119,6 +121,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onBack = { navController.popBackStack() },
                     gridColumns = layout.gridColumns,
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    onMessage = { userId -> navController.navigate("${Routes.CHAT}/$userId") },
                 )
             }
             composable("${Routes.COMMENTS}/{postId}") { entry ->
@@ -158,6 +161,16 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
             composable("${Routes.STORY_VIEWER}/{authorId}") { entry ->
                 val authorId = entry.arguments?.getString("authorId").orEmpty()
                 StoryViewerScreen(startAuthorId = authorId, onClose = { navController.popBackStack() })
+            }
+            composable(Routes.INBOX) {
+                InboxScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenChat = { userId -> navController.navigate("${Routes.CHAT}/$userId") },
+                )
+            }
+            composable("${Routes.CHAT}/{peerId}") { entry ->
+                val peerId = entry.arguments?.getString("peerId").orEmpty()
+                ChatScreen(peerId = peerId, onBack = { navController.popBackStack() })
             }
         }
     }

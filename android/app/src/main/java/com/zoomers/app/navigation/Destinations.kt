@@ -26,6 +26,8 @@ object Routes {
     const val SAVED = "saved"
     const val HASHTAG = "hashtag"
     const val STORY_VIEWER = "story-viewer"
+    const val INBOX = "inbox"
+    const val CHAT = "chat"
 }
 
 /** The five primary destinations shown in the bottom bar / navigation rail. */

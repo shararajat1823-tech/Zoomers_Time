@@ -3,6 +3,7 @@ package com.zoomers.app.core.network
 import com.zoomers.app.core.network.dto.AddCommentRequestDto
 import com.zoomers.app.core.network.dto.AuthResponseDto
 import com.zoomers.app.core.network.dto.CommentViewDto
+import com.zoomers.app.core.network.dto.ConversationDto
 import com.zoomers.app.core.network.dto.CreatePostRequestDto
 import com.zoomers.app.core.network.dto.CreateStoryRequestDto
 import com.zoomers.app.core.network.dto.CreateUploadSessionRequestDto
@@ -10,7 +11,11 @@ import com.zoomers.app.core.network.dto.CursorPageDto
 import com.zoomers.app.core.network.dto.FollowResultDto
 import com.zoomers.app.core.network.dto.HashtagResultDto
 import com.zoomers.app.core.network.dto.LikeStateDto
+import com.zoomers.app.core.network.dto.MessageDto
 import com.zoomers.app.core.network.dto.NotificationViewDto
+import com.zoomers.app.core.network.dto.SendMessageRequestDto
+import com.zoomers.app.core.network.dto.StartConversationRequestDto
+import com.zoomers.app.core.network.dto.UnreadCountDto
 import com.zoomers.app.core.network.dto.PublicProfileViewDto
 import com.zoomers.app.core.network.dto.SettingsViewDto
 import com.zoomers.app.core.network.dto.UpdateSettingsRequestDto
@@ -176,6 +181,36 @@ interface ZoomersApi {
 
     @DELETE("users/{userId}/follow")
     suspend fun unfollow(@Path("userId") userId: String): Response<Unit>
+
+    // ---- Direct messages ----
+
+    @POST("conversations")
+    suspend fun startConversation(@Body body: StartConversationRequestDto): Response<ConversationDto>
+
+    @GET("conversations")
+    suspend fun conversations(
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int = 30,
+    ): Response<CursorPageDto<ConversationDto>>
+
+    @GET("conversations/unread-count")
+    suspend fun conversationsUnreadCount(): Response<UnreadCountDto>
+
+    @GET("conversations/{conversationId}/messages")
+    suspend fun messages(
+        @Path("conversationId") conversationId: String,
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int = 30,
+    ): Response<CursorPageDto<MessageDto>>
+
+    @POST("conversations/{conversationId}/messages")
+    suspend fun sendMessage(
+        @Path("conversationId") conversationId: String,
+        @Body body: SendMessageRequestDto,
+    ): Response<MessageDto>
+
+    @POST("conversations/{conversationId}/read")
+    suspend fun markConversationRead(@Path("conversationId") conversationId: String): Response<Unit>
 
     // ---- Media upload + post creation ----
 

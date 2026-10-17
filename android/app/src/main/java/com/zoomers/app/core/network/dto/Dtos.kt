@@ -260,6 +260,46 @@ data class StoryTrayDto(
     val isSelf: Boolean = false,
 )
 
+// ---- Direct messages ----
+
+@Serializable
+data class ChatUserDto(
+    val id: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String? = null,
+    val isVerified: Boolean = false,
+)
+
+@Serializable
+data class ConversationDto(
+    val id: String,
+    val otherUser: ChatUserDto,
+    val lastMessagePreview: String? = null,
+    val lastMessageAt: String,
+    val unreadCount: Int = 0,
+)
+
+@Serializable
+data class MessageDto(
+    val id: String,
+    val conversationId: String,
+    val senderId: String,
+    val body: String,
+    val createdAt: String,
+    val readAt: String? = null,
+    val isMine: Boolean = false,
+)
+
+@Serializable
+data class StartConversationRequestDto(val recipientUserId: String)
+
+@Serializable
+data class SendMessageRequestDto(val body: String)
+
+@Serializable
+data class UnreadCountDto(val count: Int = 0)
+
 // ---- Hashtags ----
 
 @Serializable
