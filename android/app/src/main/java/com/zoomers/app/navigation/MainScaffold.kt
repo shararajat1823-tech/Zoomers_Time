@@ -25,9 +25,12 @@ import com.zoomers.app.feature.comments.CommentsScreen
 import com.zoomers.app.feature.create.CreatePostScreen
 import com.zoomers.app.feature.detail.PostDetailScreen
 import com.zoomers.app.feature.editprofile.EditProfileScreen
+import com.zoomers.app.feature.hashtag.HashtagScreen
 import com.zoomers.app.feature.home.HomeScreen
 import com.zoomers.app.feature.profile.ProfileScreen
+import com.zoomers.app.feature.saved.SavedPostsScreen
 import com.zoomers.app.feature.search.SearchScreen
+import com.zoomers.app.feature.settings.SettingsScreen
 import com.zoomers.app.feature.userprofile.UserProfileScreen
 
 /**
@@ -68,7 +71,10 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                 )
             }
             composable(Routes.SEARCH) {
-                SearchScreen(onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") })
+                SearchScreen(
+                    onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") },
+                    onOpenHashtag = { tag -> navController.navigate("${Routes.HASHTAG}/$tag") },
+                )
             }
             composable(Routes.CREATE) {
                 val goHome: () -> Unit = {
@@ -86,6 +92,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     gridColumns = layout.gridColumns,
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
+                    onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 )
             }
             composable("${Routes.POST}/{postId}") { entry ->
@@ -121,6 +128,29 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onBack = { navController.popBackStack() },
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
                     onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") },
+                )
+            }
+            composable(Routes.SETTINGS) {
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenSaved = { navController.navigate(Routes.SAVED) },
+                    onLoggedOut = { navController.popBackStack() },
+                )
+            }
+            composable(Routes.SAVED) {
+                SavedPostsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    gridColumns = layout.gridColumns,
+                )
+            }
+            composable("${Routes.HASHTAG}/{tag}") { entry ->
+                val tag = entry.arguments?.getString("tag").orEmpty()
+                HashtagScreen(
+                    tag = tag,
+                    onBack = { navController.popBackStack() },
+                    onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    gridColumns = layout.gridColumns,
                 )
             }
         }

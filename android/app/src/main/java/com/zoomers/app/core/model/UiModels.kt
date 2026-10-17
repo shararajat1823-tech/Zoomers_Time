@@ -1,10 +1,12 @@
 package com.zoomers.app.core.model
 
 import com.zoomers.app.core.network.dto.CommentViewDto
+import com.zoomers.app.core.network.dto.HashtagResultDto
 import com.zoomers.app.core.network.dto.NotificationViewDto
 import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
 import com.zoomers.app.core.network.dto.PublicProfileViewDto
+import com.zoomers.app.core.network.dto.SettingsViewDto
 import com.zoomers.app.core.network.dto.UserListItemDto
 
 data class PostMediaUi(
@@ -51,6 +53,7 @@ data class FeedPage(val items: List<PostUi>, val nextCursor: String?)
 
 data class CommentUi(
     val id: String,
+    val authorId: String,
     val username: String,
     val displayName: String,
     val isVerified: Boolean,
@@ -87,6 +90,18 @@ data class NotificationUi(
 )
 
 data class NotificationPage(val items: List<NotificationUi>, val nextCursor: String?)
+
+data class HashtagUi(val tag: String, val usageCount: Int)
+
+data class HashtagListPage(val items: List<HashtagUi>, val nextCursor: String?)
+
+data class SettingsUi(
+    val showOnlineStatus: Boolean,
+    val pushLikes: Boolean,
+    val pushComments: Boolean,
+    val pushFollows: Boolean,
+    val pushMessages: Boolean,
+)
 
 /** Another user's profile, with the viewer's relationship for the follow button. */
 data class PublicProfileUi(
@@ -136,6 +151,7 @@ fun ProfileViewDto.toUi(): ProfileUi = ProfileUi(
 
 fun CommentViewDto.toUi(): CommentUi = CommentUi(
     id = id,
+    authorId = author.id,
     username = author.username,
     displayName = author.displayName,
     isVerified = author.isVerified,
@@ -146,6 +162,10 @@ fun CommentViewDto.toUi(): CommentUi = CommentUi(
 )
 
 fun UserListItemDto.toUi(): UserListItemUi = UserListItemUi(id, username, displayName, isVerified, isPrivate)
+
+fun HashtagResultDto.toUi(): HashtagUi = HashtagUi(tag, usageCount)
+
+fun SettingsViewDto.toUi(): SettingsUi = SettingsUi(showOnlineStatus, pushLikes, pushComments, pushFollows, pushMessages)
 
 fun NotificationViewDto.toUi(): NotificationUi = NotificationUi(
     id = id,

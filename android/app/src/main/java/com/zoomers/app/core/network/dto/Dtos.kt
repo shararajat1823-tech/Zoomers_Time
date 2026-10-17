@@ -230,6 +230,36 @@ data class NotificationViewDto(
     val read: Boolean = false,
 )
 
+// ---- Hashtags ----
+
+@Serializable
+data class HashtagResultDto(val tag: String, val usageCount: Int = 0)
+
+// ---- Settings ----
+
+@Serializable
+data class SettingsViewDto(
+    val theme: Int = 0,
+    val language: String = "en",
+    val whoCanComment: Int = 0,
+    val whoCanMention: Int = 0,
+    val whoCanMessage: Int = 0,
+    val showOnlineStatus: Boolean = true,
+    val pushLikes: Boolean = true,
+    val pushComments: Boolean = true,
+    val pushFollows: Boolean = true,
+    val pushMessages: Boolean = true,
+)
+
+@Serializable
+data class UpdateSettingsRequestDto(
+    val showOnlineStatus: Boolean? = null,
+    val pushLikes: Boolean? = null,
+    val pushComments: Boolean? = null,
+    val pushFollows: Boolean? = null,
+    val pushMessages: Boolean? = null,
+)
+
 /** RFC 7807 problem response surfaced by the API on errors. */
 @Serializable
 data class ProblemDto(

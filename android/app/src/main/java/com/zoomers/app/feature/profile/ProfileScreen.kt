@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Collections
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,6 +51,7 @@ fun ProfileScreen(
     gridColumns: Int = 3,
     onOpenPost: (String) -> Unit = {},
     onEditProfile: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -67,6 +69,7 @@ fun ProfileScreen(
                 onLogout = viewModel::logout,
                 onOpenPost = onOpenPost,
                 onEditProfile = onEditProfile,
+                onOpenSettings = onOpenSettings,
             )
             else -> EmptyState("No profile")
         }
@@ -81,6 +84,7 @@ private fun ProfileContent(
     onLogout: () -> Unit,
     onOpenPost: (String) -> Unit,
     onEditProfile: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val colors = ZoomersTheme.colors
     LazyVerticalGrid(
@@ -89,6 +93,14 @@ private fun ProfileContent(
     ) {
         item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
             Column(Modifier.fillMaxWidth().padding(Spacing.lg)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Icon(
+                        Icons.Outlined.Settings,
+                        contentDescription = "Settings",
+                        tint = colors.text,
+                        modifier = Modifier.size(24.dp).clickable(onClick = onOpenSettings),
+                    )
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ZAvatar(key = profile.username, size = 84.dp, imageUrl = profile.avatarUrl, hasStoryRing = true)
                     Spacer(Modifier.width(Spacing.xl))

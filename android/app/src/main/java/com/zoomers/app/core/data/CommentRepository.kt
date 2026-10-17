@@ -27,4 +27,6 @@ class CommentRepository @Inject constructor(
             is ApiResult.Success -> ApiResult.Success(r.data.toUi())
             is ApiResult.Error -> r
         }
+
+    suspend fun delete(commentId: String): ApiResult<Unit> = safeApiCall { api.deleteComment(commentId) }
 }

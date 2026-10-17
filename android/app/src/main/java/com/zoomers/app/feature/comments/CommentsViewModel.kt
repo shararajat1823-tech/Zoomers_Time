@@ -3,6 +3,7 @@ package com.zoomers.app.feature.comments
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zoomers.app.core.data.CommentRepository
+import com.zoomers.app.core.data.CurrentUserProvider
 import com.zoomers.app.core.model.CommentUi
 import com.zoomers.app.core.network.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +19,7 @@ data class CommentsUiState(
     val comments: List<CommentUi> = emptyList(),
     val input: String = "",
     val submitting: Boolean = false,
+    val currentUserId: String? = null,
     val error: String? = null,
     val nextCursor: String? = null,
 ) {
@@ -27,6 +29,7 @@ data class CommentsUiState(
 @HiltViewModel
 class CommentsViewModel @Inject constructor(
     private val commentRepository: CommentRepository,
+    private val currentUser: CurrentUserProvider,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommentsUiState())
@@ -38,13 +41,19 @@ class CommentsViewModel @Inject constructor(
         this.postId = postId
         _state.update { it.copy(loading = it.comments.isEmpty(), error = null) }
         viewModelScope.launch {
+            val uid = currentUser.userId()
             when (val r = commentRepository.comments(postId)) {
                 is ApiResult.Success -> _state.update {
-                    it.copy(loading = false, comments = r.data.items, nextCursor = r.data.nextCursor)
+                    it.copy(loading = false, comments = r.data.items, nextCursor = r.data.nextCursor, currentUserId = uid)
                 }
-                is ApiResult.Error -> _state.update { it.copy(loading = false, error = r.message) }
+                is ApiResult.Error -> _state.update { it.copy(loading = false, error = r.message, currentUserId = uid) }
             }
         }
+    }
+
+    fun delete(comment: CommentUi) {
+        _state.update { it.copy(comments = it.comments.filterNot { c -> c.id == comment.id }) }
+        viewModelScope.launch { commentRepository.delete(comment.id) }
     }
 
     fun onInputChange(v: String) = _state.update { it.copy(input = v) }

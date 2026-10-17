@@ -1,6 +1,7 @@
 package com.zoomers.app.core.data
 
 import com.zoomers.app.core.model.FeedPage
+import com.zoomers.app.core.model.HashtagListPage
 import com.zoomers.app.core.model.PublicProfileUi
 import com.zoomers.app.core.model.UserListPage
 import com.zoomers.app.core.model.toUi
@@ -52,4 +53,20 @@ class UserRepository @Inject constructor(
         }
 
     suspend fun unfollow(userId: String): ApiResult<Unit> = safeApiCall { api.unfollow(userId) }
+
+    suspend fun searchHashtags(query: String, cursor: String? = null, limit: Int = 20): ApiResult<HashtagListPage> =
+        when (val r = safeApiCall { api.searchHashtags(query, cursor, limit) }) {
+            is ApiResult.Success -> ApiResult.Success(
+                HashtagListPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
+            )
+            is ApiResult.Error -> r
+        }
+
+    suspend fun hashtagPosts(tag: String, cursor: String? = null, limit: Int = 24): ApiResult<FeedPage> =
+        when (val r = safeApiCall { api.hashtagPosts(tag, cursor, limit) }) {
+            is ApiResult.Success -> ApiResult.Success(
+                FeedPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
+            )
+            is ApiResult.Error -> r
+        }
 }

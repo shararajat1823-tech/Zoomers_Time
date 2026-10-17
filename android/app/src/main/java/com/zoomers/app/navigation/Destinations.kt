@@ -22,6 +22,9 @@ object Routes {
     const val USER = "user"
     const val COMMENTS = "comments"
     const val ACTIVITY = "activity"
+    const val SETTINGS = "settings"
+    const val SAVED = "saved"
+    const val HASHTAG = "hashtag"
 }
 
 /** The five primary destinations shown in the bottom bar / navigation rail. */

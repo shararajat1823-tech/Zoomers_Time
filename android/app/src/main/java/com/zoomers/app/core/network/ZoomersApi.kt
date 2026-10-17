@@ -7,9 +7,12 @@ import com.zoomers.app.core.network.dto.CreatePostRequestDto
 import com.zoomers.app.core.network.dto.CreateUploadSessionRequestDto
 import com.zoomers.app.core.network.dto.CursorPageDto
 import com.zoomers.app.core.network.dto.FollowResultDto
+import com.zoomers.app.core.network.dto.HashtagResultDto
 import com.zoomers.app.core.network.dto.LikeStateDto
 import com.zoomers.app.core.network.dto.NotificationViewDto
 import com.zoomers.app.core.network.dto.PublicProfileViewDto
+import com.zoomers.app.core.network.dto.SettingsViewDto
+import com.zoomers.app.core.network.dto.UpdateSettingsRequestDto
 import com.zoomers.app.core.network.dto.UserListItemDto
 import com.zoomers.app.core.network.dto.LoginRequestDto
 import com.zoomers.app.core.network.dto.LogoutRequestDto
@@ -56,6 +59,12 @@ interface ZoomersApi {
         @Query("limit") limit: Int,
     ): Response<CursorPageDto<PostViewDto>>
 
+    @GET("users/me/saved")
+    suspend fun savedPosts(
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<PostViewDto>>
+
     @GET("feed/following")
     suspend fun followingFeed(
         @Query("cursor") cursor: String?,
@@ -64,6 +73,12 @@ interface ZoomersApi {
 
     @GET("posts/{postId}")
     suspend fun getPost(@Path("postId") postId: String): Response<PostViewDto>
+
+    @DELETE("posts/{postId}")
+    suspend fun deletePost(@Path("postId") postId: String): Response<Unit>
+
+    @DELETE("comments/{commentId}")
+    suspend fun deleteComment(@Path("commentId") commentId: String): Response<Unit>
 
     @POST("posts/{postId}/likes")
     suspend fun likePost(@Path("postId") postId: String): Response<LikeStateDto>
@@ -107,6 +122,20 @@ interface ZoomersApi {
         @Query("limit") limit: Int,
     ): Response<CursorPageDto<UserListItemDto>>
 
+    @GET("search/hashtags")
+    suspend fun searchHashtags(
+        @Query("q") query: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<HashtagResultDto>>
+
+    @GET("hashtags/{tag}/posts")
+    suspend fun hashtagPosts(
+        @Path("tag") tag: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): Response<CursorPageDto<PostViewDto>>
+
     @GET("users/{username}")
     suspend fun userByUsername(@Path("username") username: String): Response<PublicProfileViewDto>
 
@@ -120,6 +149,14 @@ interface ZoomersApi {
 
     @POST("notifications/read")
     suspend fun markNotificationsRead(): Response<Unit>
+
+    // ---- Settings ----
+
+    @GET("settings")
+    suspend fun settings(): Response<SettingsViewDto>
+
+    @PATCH("settings")
+    suspend fun updateSettings(@Body body: UpdateSettingsRequestDto): Response<SettingsViewDto>
 
     @POST("users/{userId}/follow")
     suspend fun follow(@Path("userId") userId: String): Response<FollowResultDto>

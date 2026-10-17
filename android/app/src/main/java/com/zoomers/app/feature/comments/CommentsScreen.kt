@@ -2,6 +2,7 @@ package com.zoomers.app.feature.comments
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +28,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,7 +78,13 @@ fun CommentsScreen(
                 }
                 state.comments.isEmpty() -> EmptyState("No comments yet", "Be the first to comment.", modifier = Modifier.padding(top = Spacing.xxl))
                 else -> LazyColumn(Modifier.fillMaxSize()) {
-                    items(state.comments, key = { it.id }) { CommentRow(it) }
+                    items(state.comments, key = { it.id }) { comment ->
+                        CommentRow(
+                            comment = comment,
+                            canDelete = comment.authorId == state.currentUserId,
+                            onDelete = { viewModel.delete(comment) },
+                        )
+                    }
                 }
             }
         }
@@ -118,20 +130,36 @@ fun CommentsScreen(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun CommentRow(comment: CommentUi) {
+private fun CommentRow(comment: CommentUi, canDelete: Boolean, onDelete: () -> Unit) {
     val colors = ZoomersTheme.colors
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-        verticalAlignment = Alignment.Top,
-    ) {
-        ZAvatar(key = comment.username, size = 36.dp)
-        Column(Modifier.padding(start = Spacing.md)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                Text(comment.username, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.text)
-                Text(relativeTime(comment.createdAtIso), style = MaterialTheme.typography.bodySmall, color = colors.textMuted)
+    var menuOpen by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = { if (canDelete) menuOpen = true },
+                )
+                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+            verticalAlignment = Alignment.Top,
+        ) {
+            ZAvatar(key = comment.username, size = 36.dp)
+            Column(Modifier.padding(start = Spacing.md)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Text(comment.username, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.text)
+                    Text(relativeTime(comment.createdAtIso), style = MaterialTheme.typography.bodySmall, color = colors.textMuted)
+                }
+                Text(comment.body, style = MaterialTheme.typography.bodyMedium, color = colors.text)
             }
-            Text(comment.body, style = MaterialTheme.typography.bodyMedium, color = colors.text)
+        }
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            DropdownMenuItem(
+                text = { Text("Delete", color = colors.like) },
+                onClick = { menuOpen = false; onDelete() },
+            )
         }
     }
 }

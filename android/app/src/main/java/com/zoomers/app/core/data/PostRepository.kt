@@ -62,4 +62,10 @@ class PostRepository @Inject constructor(
             is ApiResult.Error -> r
         }
     }
+
+    suspend fun delete(postId: String): ApiResult<Unit> {
+        val r = safeApiCall { api.deletePost(postId) }
+        if (r is ApiResult.Success) feedRefreshBus.requestRefresh()
+        return r
+    }
 }

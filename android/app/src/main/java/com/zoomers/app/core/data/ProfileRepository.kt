@@ -21,8 +21,22 @@ class ProfileRepository @Inject constructor(
             is ApiResult.Error -> r
         }
 
+    suspend fun setPrivate(isPrivate: Boolean): ApiResult<ProfileUi> =
+        when (val r = safeApiCall { api.updateMe(UpdateProfileRequestDto(isPrivate = isPrivate)) }) {
+            is ApiResult.Success -> ApiResult.Success(r.data.toUi())
+            is ApiResult.Error -> r
+        }
+
     suspend fun userPosts(userId: String, cursor: String? = null, limit: Int = 24): ApiResult<FeedPage> =
         when (val r = safeApiCall { api.userPosts(userId, cursor, limit) }) {
+            is ApiResult.Success -> ApiResult.Success(
+                FeedPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
+            )
+            is ApiResult.Error -> r
+        }
+
+    suspend fun savedPosts(cursor: String? = null, limit: Int = 24): ApiResult<FeedPage> =
+        when (val r = safeApiCall { api.savedPosts(cursor, limit) }) {
             is ApiResult.Success -> ApiResult.Success(
                 FeedPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
             )

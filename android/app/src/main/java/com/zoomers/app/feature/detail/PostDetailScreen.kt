@@ -14,12 +14,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -42,8 +48,10 @@ fun PostDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val colors = ZoomersTheme.colors
+    var menuOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(postId) { viewModel.load(postId) }
+    LaunchedEffect(state.deleted) { if (state.deleted) onBack() }
 
     Column(
         Modifier
@@ -66,8 +74,21 @@ fun PostDetailScreen(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.text,
-                modifier = Modifier.padding(start = Spacing.sm),
+                modifier = Modifier.padding(start = Spacing.sm).weight(1f),
             )
+            if (state.isOwnPost) {
+                Box {
+                    Box(Modifier.padding(Spacing.sm).clickable { menuOpen = true }) {
+                        Icon(Icons.Outlined.MoreVert, contentDescription = "More", tint = colors.text)
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Delete post", color = colors.like) },
+                            onClick = { menuOpen = false; viewModel.deletePost() },
+                        )
+                    }
+                }
+            }
         }
 
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
