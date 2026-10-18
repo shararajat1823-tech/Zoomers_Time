@@ -1,6 +1,11 @@
 package com.zoomers.app.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox as AddBoxFilled
+import androidx.compose.material.icons.filled.Home as HomeFilled
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayCircle as PlayCircleFilled
+import androidx.compose.material.icons.filled.Search as SearchFilled
 import androidx.compose.material.icons.outlined.AddBox
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PersonOutline
@@ -35,13 +40,15 @@ enum class TopLevelDestination(
     val route: String,
     val label: String,
     val icon: ImageVector,
+    val selectedIcon: ImageVector,
     val isCreate: Boolean = false,
+    val isProfile: Boolean = false,
 ) {
-    Home(Routes.HOME, "Home", Icons.Outlined.Home),
-    Search(Routes.SEARCH, "Search", Icons.Outlined.Search),
-    Create(Routes.CREATE, "Create", Icons.Outlined.AddBox, isCreate = true),
-    Reels(Routes.REELS, "Reels", Icons.Outlined.PlayCircle),
-    Profile(Routes.PROFILE, "Profile", Icons.Outlined.PersonOutline);
+    Home(Routes.HOME, "Home", Icons.Outlined.Home, Icons.Filled.HomeFilled),
+    Search(Routes.SEARCH, "Search", Icons.Outlined.Search, Icons.Filled.SearchFilled),
+    Create(Routes.CREATE, "Create", Icons.Outlined.AddBox, Icons.Filled.AddBoxFilled, isCreate = true),
+    Reels(Routes.REELS, "Reels", Icons.Outlined.PlayCircle, Icons.Filled.PlayCircleFilled),
+    Profile(Routes.PROFILE, "Profile", Icons.Outlined.PersonOutline, Icons.Filled.Person, isProfile = true);
 
     companion object {
         val all = entries

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -47,7 +48,20 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
     val navController = rememberNavController()
     val layout = rememberZoomersLayout(windowSizeClass)
 
-    val navItems = TopLevelDestination.all.map { NavItem(it.route, it.label, it.icon, it.isCreate) }
+    val navViewModel: com.zoomers.app.navigation.NavViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val me by navViewModel.me.collectAsStateWithLifecycle()
+    val navItems = TopLevelDestination.all.map {
+        NavItem(
+            route = it.route,
+            label = it.label,
+            icon = it.icon,
+            selectedIcon = it.selectedIcon,
+            isCreate = it.isCreate,
+            isProfile = it.isProfile,
+            avatarUrl = if (it.isProfile) me?.avatarUrl else null,
+            avatarKey = if (it.isProfile) me?.username else null,
+        )
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.hierarchy?.firstOrNull()?.route
 

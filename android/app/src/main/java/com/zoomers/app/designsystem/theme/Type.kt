@@ -7,13 +7,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Type scale. The brand wordmark uses a serif; UI text uses the platform sans.
- * (Swap [BrandSerif] for a bundled font such as Playfair/DM Serif Display to
- * match the concept exactly — kept as the system serif here to avoid shipping
- * binary font assets in this starter.)
+ * Type scale. A clean platform sans-serif is used everywhere for a crisp,
+ * modern social feel. [BrandSerif] is retained as an alias (also sans) so any
+ * remaining references keep compiling.
  */
-val BrandSerif = FontFamily.Serif
 val UiSans = FontFamily.SansSerif
+val BrandSerif = UiSans
 
 internal fun zoomersTypography(colors: ZoomersColors) = Typography(
     // Brand wordmark / large display

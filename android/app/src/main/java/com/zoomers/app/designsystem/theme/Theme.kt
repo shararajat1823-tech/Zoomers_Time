@@ -33,32 +33,32 @@ data class ZoomersColors(
 )
 
 private val LightColors = ZoomersColors(
-    background = ZoomersPalette.Cream,
-    surface = ZoomersPalette.Cream,
-    surfaceElevated = ZoomersPalette.CreamElevated,
-    primary = ZoomersPalette.Teal,
-    onPrimary = ZoomersPalette.Cream,
-    accent = ZoomersPalette.Teal,
+    background = ZoomersPalette.White,
+    surface = ZoomersPalette.White,
+    surfaceElevated = ZoomersPalette.OffWhite,
+    primary = ZoomersPalette.ActionBlue,
+    onPrimary = ZoomersPalette.White,
+    accent = ZoomersPalette.ActionBlue,
     text = ZoomersPalette.Ink,
     textMuted = ZoomersPalette.InkMuted,
     hairline = ZoomersPalette.HairlineLight,
-    like = ZoomersPalette.Coral,
-    storyRing = ZoomersPalette.Teal,
+    like = ZoomersPalette.LikeRed,
+    storyRing = ZoomersPalette.G3,
     isDark = false,
 )
 
 private val DarkColors = ZoomersColors(
-    background = ZoomersPalette.Night,
-    surface = ZoomersPalette.Night,
-    surfaceElevated = ZoomersPalette.NightElevated,
-    primary = ZoomersPalette.TealBright,
-    onPrimary = ZoomersPalette.Night,
-    accent = ZoomersPalette.TealBright,
+    background = ZoomersPalette.Black,
+    surface = ZoomersPalette.Black,
+    surfaceElevated = ZoomersPalette.BlackElevated,
+    primary = ZoomersPalette.ActionBlueDark,
+    onPrimary = ZoomersPalette.White,
+    accent = ZoomersPalette.ActionBlueDark,
     text = ZoomersPalette.Mist,
     textMuted = ZoomersPalette.MistMuted,
     hairline = ZoomersPalette.HairlineDark,
-    like = ZoomersPalette.Coral,
-    storyRing = ZoomersPalette.TealBright,
+    like = ZoomersPalette.LikeRed,
+    storyRing = ZoomersPalette.G3,
     isDark = true,
 )
 

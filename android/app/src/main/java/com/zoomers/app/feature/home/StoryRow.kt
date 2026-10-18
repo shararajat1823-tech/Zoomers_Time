@@ -30,7 +30,7 @@ import com.zoomers.app.designsystem.theme.ZoomersTheme
 
 /**
  * Horizontally-scrolling stories rail backed by real story trays. "Your story"
- * leads with an add badge; each tray shows the teal unseen ring.
+ * leads with an add badge; each unseen tray shows the brand gradient ring.
  */
 @Composable
 fun StoryRow(

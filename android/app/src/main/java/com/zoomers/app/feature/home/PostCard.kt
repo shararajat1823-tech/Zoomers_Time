@@ -28,6 +28,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.delay
 import androidx.compose.ui.layout.ContentScale
@@ -142,6 +146,15 @@ fun PostCard(
         }
 
         // Actions
+        val likeScale = remember(post.id) { Animatable(1f) }
+        var prevLiked by remember(post.id) { mutableStateOf(post.hasLiked) }
+        LaunchedEffect(post.hasLiked) {
+            if (post.hasLiked && !prevLiked) {
+                likeScale.snapTo(0.7f)
+                likeScale.animateTo(1f, spring(dampingRatio = 0.3f, stiffness = Spring.StiffnessMediumLow))
+            }
+            prevLiked = post.hasLiked
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
@@ -151,6 +164,7 @@ fun PostCard(
                 tint = if (post.hasLiked) colors.like else colors.text,
                 contentDescription = "Like",
                 onClick = { onLikeToggle(post) },
+                scale = likeScale.value,
             )
             ActionIcon(Icons.Outlined.ChatBubbleOutline, colors.text, "Comment") { onOpenComments(post.id) }
             ActionIcon(Icons.AutoMirrored.Outlined.Send, colors.text, "Share") {}
@@ -203,11 +217,12 @@ private fun ActionIcon(
     tint: androidx.compose.ui.graphics.Color,
     contentDescription: String,
     onClick: () -> Unit,
+    scale: Float = 1f,
 ) {
     Box(
         modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(24.dp))
+        Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(24.dp).scale(scale))
     }
 }
