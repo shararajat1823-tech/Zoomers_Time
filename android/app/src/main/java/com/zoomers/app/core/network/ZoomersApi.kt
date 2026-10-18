@@ -125,6 +125,12 @@ interface ZoomersApi {
         @Query("limit") limit: Int,
     ): Response<CursorPageDto<UserListItemDto>>
 
+    @GET("search/explore")
+    suspend fun explore(
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int = 30,
+    ): Response<CursorPageDto<PostViewDto>>
+
     @GET("search/suggested-users")
     suspend fun suggestedUsers(
         @Query("cursor") cursor: String?,

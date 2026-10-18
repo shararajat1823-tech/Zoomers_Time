@@ -78,6 +78,8 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                 SearchScreen(
                     onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") },
                     onOpenHashtag = { tag -> navController.navigate("${Routes.HASHTAG}/$tag") },
+                    onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    gridColumns = layout.gridColumns,
                 )
             }
             composable(Routes.CREATE) {

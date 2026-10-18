@@ -9,34 +9,51 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.zoomers.app.core.model.PostUi
 import com.zoomers.app.core.model.UserListItemUi
 import com.zoomers.app.designsystem.component.ZAvatar
 import com.zoomers.app.designsystem.component.ZPillTabs
 import com.zoomers.app.designsystem.theme.Shapes
 import com.zoomers.app.designsystem.theme.Spacing
 import com.zoomers.app.designsystem.theme.ZoomersTheme
+import com.zoomers.app.designsystem.theme.tintFor
 
 @Composable
 fun SearchScreen(
     onOpenUser: (String) -> Unit,
     onOpenHashtag: (String) -> Unit,
+    onOpenPost: (String) -> Unit = {},
+    gridColumns: Int = 3,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -47,7 +64,7 @@ fun SearchScreen(
             value = state.query,
             onValueChange = viewModel::onQueryChange,
             modifier = Modifier.fillMaxWidth().padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.lg),
-            placeholder = { Text(if (state.mode == SearchMode.People) "Search people" else "Search hashtags") },
+            placeholder = { Text("Search") },
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = colors.textMuted) },
             singleLine = true,
             shape = Shapes.pill,
@@ -60,29 +77,29 @@ fun SearchScreen(
             ),
         )
 
-        ZPillTabs(
-            options = listOf("People", "Tags"),
-            selectedIndex = if (state.mode == SearchMode.People) 0 else 1,
-            onSelect = { viewModel.setMode(if (it == 0) SearchMode.People else SearchMode.Tags) },
-            modifier = Modifier.fillMaxWidth().padding(Spacing.lg),
-        )
-
-        if (state.mode == SearchMode.People && state.showingSuggested && state.users.isNotEmpty()) {
-            Text(
-                "Suggested",
-                style = MaterialTheme.typography.labelLarge,
-                color = colors.textMuted,
-                modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+        if (state.isSearching) {
+            ZPillTabs(
+                options = listOf("People", "Tags"),
+                selectedIndex = if (state.mode == SearchMode.People) 0 else 1,
+                onSelect = { viewModel.setMode(if (it == 0) SearchMode.People else SearchMode.Tags) },
+                modifier = Modifier.fillMaxWidth().padding(Spacing.lg),
             )
         }
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
+                !state.isSearching -> ExploreGrid(
+                    posts = state.explorePosts,
+                    loading = state.exploreLoading,
+                    gridColumns = gridColumns,
+                    onOpenPost = onOpenPost,
+                    onLoadMore = viewModel::loadMoreExplore,
+                )
                 state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Loading…", color = colors.textMuted)
                 }
                 state.mode == SearchMode.People -> if (state.users.isEmpty()) {
-                    CenteredHint(if (state.query.isBlank()) "Search for people to follow" else "No people found")
+                    CenteredHint("No people found")
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(state.users, key = { it.id }) { user ->
@@ -91,12 +108,63 @@ fun SearchScreen(
                     }
                 }
                 else -> if (state.hashtags.isEmpty()) {
-                    CenteredHint(if (state.query.isBlank()) "Search hashtags to explore" else "No hashtags found")
+                    CenteredHint("No hashtags found")
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(state.hashtags, key = { it.tag }) { tag ->
                             HashtagRow(tag.tag, tag.usageCount, onClick = { onOpenHashtag(tag.tag) })
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreGrid(
+    posts: List<PostUi>,
+    loading: Boolean,
+    gridColumns: Int,
+    onOpenPost: (String) -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val colors = ZoomersTheme.colors
+    val gridState = rememberLazyGridState()
+
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val last = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            last >= posts.size - (gridColumns * 2) && posts.isNotEmpty()
+        }
+    }
+    LaunchedEffect(shouldLoadMore) { if (shouldLoadMore) onLoadMore() }
+
+    when {
+        loading && posts.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = colors.primary, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+        }
+        posts.isEmpty() -> CenteredHint("Nothing to explore yet — be the first to post!")
+        else -> LazyVerticalGrid(
+            state = gridState,
+            columns = GridCells.Fixed(gridColumns),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            items(posts, key = { it.id }) { post ->
+                val imageUrl = post.media.firstOrNull()?.let { it.thumbnailUrl ?: it.url }
+                Box(
+                    Modifier.padding(1.dp).aspectRatio(1f).background(tintFor(post.id)).clickable { onOpenPost(post.id) },
+                ) {
+                    if (imageUrl != null) {
+                        AsyncImage(model = imageUrl, contentDescription = post.caption, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
+                    if (post.isCarousel) {
+                        Icon(
+                            Icons.Outlined.Collections,
+                            contentDescription = "Multiple photos",
+                            tint = colors.background,
+                            modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(18.dp),
+                        )
                     }
                 }
             }

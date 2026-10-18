@@ -21,6 +21,14 @@ class FeedRepository @Inject constructor(
             is ApiResult.Error -> r
         }
 
+    suspend fun explore(cursor: String?, limit: Int = 30): ApiResult<FeedPage> =
+        when (val r = safeApiCall { api.explore(cursor, limit) }) {
+            is ApiResult.Success -> ApiResult.Success(
+                FeedPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
+            )
+            is ApiResult.Error -> r
+        }
+
     suspend fun post(postId: String): ApiResult<PostUi> =
         when (val r = safeApiCall { api.getPost(postId) }) {
             is ApiResult.Success -> ApiResult.Success(r.data.toUi())
