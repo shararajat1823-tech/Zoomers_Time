@@ -17,14 +17,34 @@ public sealed class EngagementService : IEngagementService
     private readonly IApplicationDbContext _db;
     private readonly PostService _posts;
     private readonly IClock _clock;
+    private readonly IPushSender _push;
 
     private static readonly Error PostNotFound = Error.NotFound("post.not_found", "Post not found.");
 
-    public EngagementService(IApplicationDbContext db, PostService posts, IClock clock)
+    public EngagementService(IApplicationDbContext db, PostService posts, IClock clock, IPushSender push)
     {
         _db = db;
         _posts = posts;
         _clock = clock;
+        _push = push;
+    }
+
+    /// <summary>
+    /// Best-effort push to a post's author for a like/comment. Resolves the actor's
+    /// username for the body. The push sender honors the recipient's settings and
+    /// never throws, so this can't affect the triggering operation.
+    /// </summary>
+    private async Task NotifyAuthorAsync(Guid recipientId, Guid actorId, PushCategory category, Guid postId, CancellationToken ct)
+    {
+        var actor = await _db.Users.Where(u => u.Id == actorId).Select(u => u.Username).FirstOrDefaultAsync(ct) ?? "Someone";
+        var (title, body) = category switch
+        {
+            PushCategory.Like => ("New like", $"{actor} liked your post"),
+            PushCategory.Comment => ("New comment", $"{actor} commented on your post"),
+            _ => ("Zoomers", $"{actor} interacted with your post"),
+        };
+        var data = new Dictionary<string, string> { ["type"] = category.ToString().ToLowerInvariant(), ["postId"] = postId.ToString() };
+        await _push.SendAsync(recipientId, new PushMessage(title, body, category, data), ct);
     }
 
     // ---- post likes ----
@@ -62,6 +82,9 @@ public sealed class EngagementService : IEngagementService
             var count = await _db.Posts.Where(p => p.Id == postId).Select(p => p.LikeCount).FirstOrDefaultAsync(ct);
             return Result.Success(new LikeState(true, count));
         }
+
+        if (post.AuthorId != userId)
+            await NotifyAuthorAsync(post.AuthorId, userId, PushCategory.Like, postId, ct);
 
         return Result.Success(new LikeState(true, post.LikeCount));
     }
@@ -162,6 +185,9 @@ public sealed class EngagementService : IEngagementService
             }
             await _db.SaveChangesAsync(token);
         }, ct);
+
+        if (post.AuthorId != userId)
+            await NotifyAuthorAsync(post.AuthorId, userId, PushCategory.Comment, postId, ct);
 
         var views = await MapCommentsAsync(new List<Comment> { comment }, userId, ct);
         return Result.Success(views[0]);

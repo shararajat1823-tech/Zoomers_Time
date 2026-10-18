@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<Notifications.INotificationService, Notifications.NotificationService>();
         services.AddScoped<Stories.IStoryService, Stories.StoryService>();
         services.AddScoped<Messaging.IMessagingService, Messaging.MessagingService>();
+        services.AddScoped<Devices.IDeviceService, Devices.DeviceService>();
         services.AddValidatorsFromAssemblyContaining<AuthService>(ServiceLifetime.Scoped);
         return services;
     }

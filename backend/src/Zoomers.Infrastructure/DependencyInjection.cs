@@ -35,6 +35,7 @@ public static class DependencyInjection
 
         services.Configure<LocalMediaOptions>(configuration.GetSection(LocalMediaOptions.SectionName));
         services.Configure<S3StorageOptions>(configuration.GetSection(S3StorageOptions.SectionName));
+        services.Configure<FcmOptions>(configuration.GetSection(FcmOptions.SectionName));
 
         // Core services.
         services.AddSingleton<IClock, SystemClock>();
@@ -66,7 +67,14 @@ public static class DependencyInjection
 
         // External-service adapters (local/in-memory first).
         services.AddScoped<IEmailSender, LoggingEmailSender>();
-        services.AddScoped<IPushSender, LoggingPushSender>();
+
+        // Push: FCM when a service-account key is configured, otherwise a logging
+        // no-op so the backend runs fine without Firebase. Same IPushSender contract.
+        var fcm = configuration.GetSection(FcmOptions.SectionName).Get<FcmOptions>() ?? new FcmOptions();
+        if (fcm.Enabled)
+            services.AddScoped<IPushSender, FcmPushSender>();
+        else
+            services.AddScoped<IPushSender, LoggingPushSender>();
 
         return services;
     }

@@ -13,11 +13,24 @@ public sealed class SocialGraphService : ISocialGraphService
 {
     private readonly IApplicationDbContext _db;
     private readonly IClock _clock;
+    private readonly IPushSender _push;
 
-    public SocialGraphService(IApplicationDbContext db, IClock clock)
+    public SocialGraphService(IApplicationDbContext db, IClock clock, IPushSender push)
     {
         _db = db;
         _clock = clock;
+        _push = push;
+    }
+
+    /// <summary>Best-effort follow push to the target (settings-honored, never throws).</summary>
+    private async Task NotifyFollowAsync(Guid recipientId, Guid actorId, bool isRequest, CancellationToken ct)
+    {
+        var actor = await _db.Users.Where(u => u.Id == actorId).Select(u => u.Username).FirstOrDefaultAsync(ct) ?? "Someone";
+        var (title, body) = isRequest
+            ? ("Follow request", $"{actor} requested to follow you")
+            : ("New follower", $"{actor} started following you");
+        var data = new Dictionary<string, string> { ["type"] = isRequest ? "follow_request" : "follow", ["actorId"] = actorId.ToString() };
+        await _push.SendAsync(recipientId, new PushMessage(title, body, PushCategory.Follow, data), ct);
     }
 
     // Blocked interactions return NotFound rather than Forbidden so a block is
@@ -64,6 +77,7 @@ public sealed class SocialGraphService : ISocialGraphService
                 CreatedAt = _clock.UtcNow
             });
             await _db.SaveChangesAsync(ct);
+            await NotifyFollowAsync(targetUserId, actorId, isRequest: true, ct);
             return Result.Success(new FollowResult(FollowOutcome.Requested));
         }
 
@@ -81,6 +95,7 @@ public sealed class SocialGraphService : ISocialGraphService
             await _db.SaveChangesAsync(token);
         }, ct);
 
+        await NotifyFollowAsync(targetUserId, actorId, isRequest: false, ct);
         return Result.Success(new FollowResult(FollowOutcome.Following));
     }
 

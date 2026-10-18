@@ -4,6 +4,7 @@ using Zoomers.Domain.Identity;
 using Zoomers.Domain.Media;
 using Zoomers.Domain.Messaging;
 using Zoomers.Domain.Notifications;
+using Zoomers.Domain.Push;
 using Zoomers.Domain.Stories;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Profiles;
@@ -49,6 +50,8 @@ public interface IApplicationDbContext
 
     DbSet<Conversation> Conversations { get; }
     DbSet<Message> Messages { get; }
+
+    DbSet<DeviceToken> DeviceTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

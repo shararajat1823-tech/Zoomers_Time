@@ -15,12 +15,14 @@ public sealed class MessagingService : IMessagingService
     private readonly IApplicationDbContext _db;
     private readonly IMediaStorage _storage;
     private readonly IClock _clock;
+    private readonly IPushSender _push;
 
-    public MessagingService(IApplicationDbContext db, IMediaStorage storage, IClock clock)
+    public MessagingService(IApplicationDbContext db, IMediaStorage storage, IClock clock, IPushSender push)
     {
         _db = db;
         _storage = storage;
         _clock = clock;
+        _push = push;
     }
 
     public async Task<Result<ConversationDto>> StartAsync(Guid userId, StartConversationRequest request, CancellationToken ct = default)
@@ -149,6 +151,12 @@ public sealed class MessagingService : IMessagingService
         conversation.LastMessagePreview = body.Length > PreviewLength ? body[..PreviewLength] : body;
 
         await _db.SaveChangesAsync(ct);
+
+        // Best-effort push to the recipient (settings-honored, never throws).
+        var senderName = await _db.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefaultAsync(ct) ?? "Someone";
+        var preview = body.Length > PreviewLength ? body[..PreviewLength] : body;
+        var data = new Dictionary<string, string> { ["type"] = "message", ["conversationId"] = conversationId.ToString(), ["senderId"] = userId.ToString() };
+        await _push.SendAsync(otherId, new PushMessage(senderName, preview, PushCategory.Message, data), ct);
 
         return Result.Success(new MessageDto(message.Id, conversationId, userId, body, now, null, true));
     }
