@@ -216,8 +216,8 @@ private fun ActionIcon(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     tint: androidx.compose.ui.graphics.Color,
     contentDescription: String,
-    onClick: () -> Unit,
     scale: Float = 1f,
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClick),

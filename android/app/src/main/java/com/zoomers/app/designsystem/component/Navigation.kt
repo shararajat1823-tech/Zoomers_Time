@@ -19,6 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -125,14 +128,11 @@ private fun AvatarDot(imageUrl: String?, key: Any?, size: androidx.compose.ui.un
 }
 
 /** Draws a 1px hairline across the top edge (the familiar bottom-bar divider). */
-private fun Modifier.drawTopHairline(color: androidx.compose.ui.graphics.Color): Modifier =
-    this.then(
-        androidx.compose.ui.draw.drawBehind {
-            drawLine(
-                color = color,
-                start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                end = androidx.compose.ui.geometry.Offset(size.width, 0f),
-                strokeWidth = 1f,
-            )
-        },
+private fun Modifier.drawTopHairline(color: Color): Modifier = drawBehind {
+    drawLine(
+        color = color,
+        start = Offset(0f, 0f),
+        end = Offset(size.width, 0f),
+        strokeWidth = 1f,
     )
+}
