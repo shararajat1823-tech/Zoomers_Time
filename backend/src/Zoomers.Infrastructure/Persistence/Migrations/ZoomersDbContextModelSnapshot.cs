@@ -688,6 +688,71 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.ToTable("DeviceTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Reels.Reel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(2200)
+                        .HasColumnType("character varying(2200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LikeCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MediaKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailKey")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("AuthorId", "CreatedAt");
+
+                    b.ToTable("Reels", (string)null);
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Reels.ReelLike", b =>
+                {
+                    b.Property<Guid>("ReelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReelId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReelLikes", (string)null);
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Social.Follow", b =>
                 {
                     b.Property<Guid>("FollowerId")
@@ -1157,6 +1222,36 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Zoomers.Domain.Reels.Reel", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Identity.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Reels.ReelLike", b =>
+                {
+                    b.HasOne("Zoomers.Domain.Reels.Reel", "Reel")
+                        .WithMany("Likes")
+                        .HasForeignKey("ReelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoomers.Domain.Identity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reel");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Zoomers.Domain.Social.Follow", b =>
                 {
                     b.HasOne("Zoomers.Domain.Identity.User", "Followee")
@@ -1310,6 +1405,11 @@ namespace Zoomers.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Zoomers.Domain.Posts.Post", b =>
                 {
                     b.Navigation("Media");
+                });
+
+            modelBuilder.Entity("Zoomers.Domain.Reels.Reel", b =>
+                {
+                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("Zoomers.Domain.Stories.Story", b =>

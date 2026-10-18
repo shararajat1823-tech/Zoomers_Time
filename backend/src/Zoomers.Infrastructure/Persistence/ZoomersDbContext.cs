@@ -8,6 +8,7 @@ using Zoomers.Domain.Messaging;
 using Zoomers.Domain.Notifications;
 using Zoomers.Domain.Posts;
 using Zoomers.Domain.Push;
+using Zoomers.Domain.Reels;
 using Zoomers.Domain.Stories;
 using Zoomers.Domain.Profiles;
 using Zoomers.Domain.Social;
@@ -53,6 +54,8 @@ public sealed class ZoomersDbContext : DbContext, IApplicationDbContext
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<Reel> Reels => Set<Reel>();
+    public DbSet<ReelLike> ReelLikes => Set<ReelLike>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

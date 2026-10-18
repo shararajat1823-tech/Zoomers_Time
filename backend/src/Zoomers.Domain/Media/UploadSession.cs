@@ -3,7 +3,7 @@ using Zoomers.Domain.Identity;
 
 namespace Zoomers.Domain.Media;
 
-public enum UploadPurpose { PostMedia = 0, StoryMedia = 1, Avatar = 2, MessageAttachment = 3 }
+public enum UploadPurpose { PostMedia = 0, StoryMedia = 1, Avatar = 2, MessageAttachment = 3, ReelVideo = 4, ReelThumbnail = 5 }
 
 public enum UploadStatus { Pending = 0, Uploaded = 1, Verified = 2, Completed = 3, Abandoned = 4 }
 

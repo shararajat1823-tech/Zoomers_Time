@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<Stories.IStoryService, Stories.StoryService>();
         services.AddScoped<Messaging.IMessagingService, Messaging.MessagingService>();
         services.AddScoped<Devices.IDeviceService, Devices.DeviceService>();
+        services.AddScoped<Reels.IReelService, Reels.ReelService>();
         services.AddValidatorsFromAssemblyContaining<AuthService>(ServiceLifetime.Scoped);
         return services;
     }
