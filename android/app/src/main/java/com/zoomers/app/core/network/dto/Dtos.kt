@@ -300,6 +300,45 @@ data class SendMessageRequestDto(val body: String)
 @Serializable
 data class UnreadCountDto(val count: Int = 0)
 
+// ---- Reels ----
+
+@Serializable
+data class ReelAuthorDto(
+    val id: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String? = null,
+    val isVerified: Boolean = false,
+)
+
+@Serializable
+data class ReelViewDto(
+    val id: String,
+    val author: ReelAuthorDto,
+    val mediaUrl: String,
+    val thumbnailUrl: String? = null,
+    val caption: String? = null,
+    val width: Int = 0,
+    val height: Int = 0,
+    val durationMs: Int = 0,
+    val likeCount: Int = 0,
+    val viewerHasLiked: Boolean = false,
+    val createdAt: String,
+)
+
+@Serializable
+data class CreateReelRequestDto(
+    val uploadSessionId: String,
+    val thumbnailUploadSessionId: String? = null,
+    val caption: String? = null,
+    val width: Int,
+    val height: Int,
+    val durationMs: Int,
+)
+
+@Serializable
+data class ReelLikeStateDto(val liked: Boolean, val likeCount: Int)
+
 // ---- Push devices ----
 
 @Serializable

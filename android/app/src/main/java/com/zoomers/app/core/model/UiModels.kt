@@ -4,6 +4,7 @@ import com.zoomers.app.core.network.dto.CommentViewDto
 import com.zoomers.app.core.network.dto.ConversationDto
 import com.zoomers.app.core.network.dto.HashtagResultDto
 import com.zoomers.app.core.network.dto.MessageDto
+import com.zoomers.app.core.network.dto.ReelViewDto
 import com.zoomers.app.core.network.dto.NotificationViewDto
 import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
@@ -271,6 +272,46 @@ fun ConversationDto.toUi(): ConversationUi = ConversationUi(
     lastMessagePreview = lastMessagePreview,
     lastMessageAtIso = lastMessageAt,
     unreadCount = unreadCount,
+)
+
+// ---- Reels ----
+
+data class ReelUi(
+    val id: String,
+    val authorId: String,
+    val username: String,
+    val displayName: String,
+    val avatarUrl: String?,
+    val isVerified: Boolean,
+    val mediaUrl: String,
+    val thumbnailUrl: String?,
+    val caption: String?,
+    val width: Int,
+    val height: Int,
+    val durationMs: Int,
+    val likeCount: Int,
+    val viewerHasLiked: Boolean,
+    val createdAtIso: String,
+)
+
+data class ReelPage(val items: List<ReelUi>, val nextCursor: String?)
+
+fun ReelViewDto.toUi(): ReelUi = ReelUi(
+    id = id,
+    authorId = author.id,
+    username = author.username,
+    displayName = author.displayName,
+    avatarUrl = author.avatarUrl,
+    isVerified = author.isVerified,
+    mediaUrl = mediaUrl,
+    thumbnailUrl = thumbnailUrl,
+    caption = caption,
+    width = width,
+    height = height,
+    durationMs = durationMs,
+    likeCount = likeCount,
+    viewerHasLiked = viewerHasLiked,
+    createdAtIso = createdAt,
 )
 
 fun MessageDto.toUi(): MessageUi = MessageUi(

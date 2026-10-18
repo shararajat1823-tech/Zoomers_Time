@@ -24,6 +24,9 @@ import com.zoomers.app.core.network.dto.LoginRequestDto
 import com.zoomers.app.core.network.dto.LogoutRequestDto
 import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
+import com.zoomers.app.core.network.dto.CreateReelRequestDto
+import com.zoomers.app.core.network.dto.ReelLikeStateDto
+import com.zoomers.app.core.network.dto.ReelViewDto
 import com.zoomers.app.core.network.dto.RefreshRequestDto
 import com.zoomers.app.core.network.dto.RegisterDeviceRequestDto
 import com.zoomers.app.core.network.dto.RegisterRequestDto
@@ -219,6 +222,26 @@ interface ZoomersApi {
 
     @POST("conversations/{conversationId}/read")
     suspend fun markConversationRead(@Path("conversationId") conversationId: String): Response<Unit>
+
+    // ---- Reels ----
+
+    @GET("reels/feed")
+    suspend fun reelsFeed(
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int = 10,
+    ): Response<CursorPageDto<ReelViewDto>>
+
+    @POST("reels")
+    suspend fun createReel(@Body body: CreateReelRequestDto): Response<ReelViewDto>
+
+    @POST("reels/{reelId}/likes")
+    suspend fun likeReel(@Path("reelId") reelId: String): Response<ReelLikeStateDto>
+
+    @DELETE("reels/{reelId}/likes")
+    suspend fun unlikeReel(@Path("reelId") reelId: String): Response<ReelLikeStateDto>
+
+    @DELETE("reels/{reelId}")
+    suspend fun deleteReel(@Path("reelId") reelId: String): Response<Unit>
 
     // ---- Push devices ----
 

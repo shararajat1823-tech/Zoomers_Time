@@ -30,6 +30,7 @@ import com.zoomers.app.feature.home.HomeScreen
 import com.zoomers.app.feature.messages.ChatScreen
 import com.zoomers.app.feature.messages.InboxScreen
 import com.zoomers.app.feature.profile.ProfileScreen
+import com.zoomers.app.feature.reels.ReelsScreen
 import com.zoomers.app.feature.saved.SavedPostsScreen
 import com.zoomers.app.feature.search.SearchScreen
 import com.zoomers.app.feature.settings.SettingsScreen
@@ -92,7 +93,11 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                 }
                 CreatePostScreen(onPosted = goHome, onCancel = goHome)
             }
-            composable(Routes.REELS) { PlaceholderScreen("Reels") }
+            composable(Routes.REELS) {
+                ReelsScreen(
+                    onOpenProfile = { username -> navController.navigate("${Routes.USER}/$username") },
+                )
+            }
             composable(Routes.PROFILE) {
                 ProfileScreen(
                     gridColumns = layout.gridColumns,

@@ -98,6 +98,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.paging.runtime)
