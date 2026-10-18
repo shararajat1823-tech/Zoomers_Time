@@ -25,7 +25,9 @@ import com.zoomers.app.core.network.dto.LogoutRequestDto
 import com.zoomers.app.core.network.dto.PostViewDto
 import com.zoomers.app.core.network.dto.ProfileViewDto
 import com.zoomers.app.core.network.dto.RefreshRequestDto
+import com.zoomers.app.core.network.dto.RegisterDeviceRequestDto
 import com.zoomers.app.core.network.dto.RegisterRequestDto
+import com.zoomers.app.core.network.dto.RemoveDeviceRequestDto
 import com.zoomers.app.core.network.dto.StoryTrayDto
 import com.zoomers.app.core.network.dto.UpdateProfileRequestDto
 import com.zoomers.app.core.network.dto.UploadSessionResponseDto
@@ -211,6 +213,14 @@ interface ZoomersApi {
 
     @POST("conversations/{conversationId}/read")
     suspend fun markConversationRead(@Path("conversationId") conversationId: String): Response<Unit>
+
+    // ---- Push devices ----
+
+    @POST("me/devices")
+    suspend fun registerDevice(@Body body: RegisterDeviceRequestDto): Response<Unit>
+
+    @POST("me/devices/remove")
+    suspend fun removeDevice(@Body body: RemoveDeviceRequestDto): Response<Unit>
 
     // ---- Media upload + post creation ----
 

@@ -7,6 +7,7 @@ import com.zoomers.app.core.data.ProfileRepository
 import com.zoomers.app.core.data.SettingsRepository
 import com.zoomers.app.core.model.SettingsUi
 import com.zoomers.app.core.network.ApiResult
+import com.zoomers.app.core.push.PushTokenRegistrar
 import com.zoomers.app.core.network.dto.UpdateSettingsRequestDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val profileRepository: ProfileRepository,
     private val authRepository: AuthRepository,
+    private val pushRegistrar: PushTokenRegistrar,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -73,6 +75,8 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun logout() {
+        // Stop this device receiving pushes for the account before clearing the session.
+        pushRegistrar.unregister()
         viewModelScope.launch { authRepository.logout() }
     }
 }

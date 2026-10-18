@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 // Backend the app talks to. Defaults to the live Render deployment so a built
@@ -95,6 +96,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.coil.compose)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.paging.runtime)

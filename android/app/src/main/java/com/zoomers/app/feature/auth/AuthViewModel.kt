@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zoomers.app.core.data.AuthRepository
 import com.zoomers.app.core.network.ApiResult
+import com.zoomers.app.core.push.PushTokenRegistrar
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ data class AuthUiState(
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val pushRegistrar: PushTokenRegistrar,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthUiState())
@@ -32,7 +34,10 @@ class AuthViewModel @Inject constructor(
         _state.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             when (val r = authRepository.login(usernameOrEmail, password)) {
-                is ApiResult.Success -> _state.update { it.copy(loading = false) }
+                is ApiResult.Success -> {
+                    _state.update { it.copy(loading = false) }
+                    pushRegistrar.syncToken()
+                }
                 is ApiResult.Error -> _state.update { it.copy(loading = false, error = r.message) }
             }
         }
@@ -46,7 +51,10 @@ class AuthViewModel @Inject constructor(
         _state.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             when (val r = authRepository.register(username, email, password, displayName)) {
-                is ApiResult.Success -> _state.update { it.copy(loading = false) }
+                is ApiResult.Success -> {
+                    _state.update { it.copy(loading = false) }
+                    pushRegistrar.syncToken()
+                }
                 is ApiResult.Error -> _state.update { it.copy(loading = false, error = r.message) }
             }
         }

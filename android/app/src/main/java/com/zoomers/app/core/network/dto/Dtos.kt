@@ -300,6 +300,14 @@ data class SendMessageRequestDto(val body: String)
 @Serializable
 data class UnreadCountDto(val count: Int = 0)
 
+// ---- Push devices ----
+
+@Serializable
+data class RegisterDeviceRequestDto(val token: String, val platform: String = "android")
+
+@Serializable
+data class RemoveDeviceRequestDto(val token: String)
+
 // ---- Hashtags ----
 
 @Serializable
