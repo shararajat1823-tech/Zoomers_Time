@@ -109,6 +109,18 @@ public sealed class SearchService : ISearchService
         return Result.Success(OffsetPage(list, offset, limit));
     }
 
+    public Task<Result<CursorPage<PostView>>> ExploreAsync(Guid viewerId, string? cursor, int limit, CancellationToken ct = default)
+    {
+        limit = PageLimit.Clamp(limit);
+
+        // Discovery-safe public posts, minus the caller's own and anyone they mute.
+        var posts = PublicVisibleQuery(viewerId)
+            .Where(p => p.AuthorId != viewerId)
+            .Where(p => !_db.UserMutes.Any(m => m.MuterId == viewerId && m.MutedId == p.AuthorId && m.MutePosts));
+
+        return _posts.PagePostsAsync(posts, viewerId, cursor, limit, ct);
+    }
+
     // ---- helpers ----
 
     /// <summary>Posts that are safe to surface in discovery: Public visibility, public account, not blocked.</summary>

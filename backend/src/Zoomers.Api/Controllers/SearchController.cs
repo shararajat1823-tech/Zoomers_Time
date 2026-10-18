@@ -41,6 +41,14 @@ public sealed class SearchController : ApiControllerBase
         if (CurrentUserId is not { } viewerId) return Unauthorized();
         return (await _search.SuggestedUsersAsync(viewerId, cursor, limit, ct)).ToResponse();
     }
+
+    /// <summary>Discovery grid of recent public posts from across the platform.</summary>
+    [HttpGet("explore")]
+    public async Task<IActionResult> Explore([FromQuery] string? cursor, [FromQuery] int limit, CancellationToken ct)
+    {
+        if (CurrentUserId is not { } viewerId) return Unauthorized();
+        return (await _search.ExploreAsync(viewerId, cursor, limit, ct)).ToResponse();
+    }
 }
 
 [ApiVersion("1.0")]

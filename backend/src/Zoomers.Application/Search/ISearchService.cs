@@ -17,4 +17,7 @@ public interface ISearchService
 
     /// <summary>Suggested accounts to follow (not followed, not blocked, popular first).</summary>
     Task<Result<CursorPage<UserListItem>>> SuggestedUsersAsync(Guid viewerId, string? cursor, int limit, CancellationToken ct = default);
+
+    /// <summary>Discovery grid: recent public posts from across the platform (excludes the caller's own and muted authors).</summary>
+    Task<Result<CursorPage<PostView>>> ExploreAsync(Guid viewerId, string? cursor, int limit, CancellationToken ct = default);
 }
