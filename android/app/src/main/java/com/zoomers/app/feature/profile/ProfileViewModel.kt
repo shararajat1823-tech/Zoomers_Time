@@ -18,10 +18,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** The two tabs on the signed-in user's profile. */
+enum class ProfileTab { Grid, Saved }
+
 data class ProfileUiState(
     val loading: Boolean = true,
     val profile: ProfileUi? = null,
     val posts: List<PostUi> = emptyList(),
+    val tab: ProfileTab = ProfileTab.Grid,
+    val saved: List<PostUi> = emptyList(),
+    val savedLoading: Boolean = false,
     val error: String? = null,
 )
 
@@ -60,6 +66,20 @@ class ProfileViewModel @Inject constructor(
                 is ApiResult.Success -> _state.update { it.copy(posts = r.data.items) }
                 is ApiResult.Error -> Unit // keep profile even if the grid fails
             }
+        }
+    }
+
+    fun selectTab(tab: ProfileTab) {
+        if (tab == _state.value.tab) return
+        _state.update { it.copy(tab = tab) }
+        if (tab == ProfileTab.Saved && _state.value.saved.isEmpty()) loadSaved()
+    }
+
+    private fun loadSaved() {
+        _state.update { it.copy(savedLoading = true) }
+        viewModelScope.launch {
+            val items = (profileRepository.savedPosts() as? ApiResult.Success)?.data?.items.orEmpty()
+            _state.update { it.copy(savedLoading = false, saved = items) }
         }
     }
 
