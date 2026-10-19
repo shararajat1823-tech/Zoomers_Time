@@ -5,11 +5,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,11 +28,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +48,6 @@ import com.zoomers.app.core.model.PostUi
 import com.zoomers.app.core.model.UserListItemUi
 import com.zoomers.app.designsystem.component.ZAvatar
 import com.zoomers.app.designsystem.component.ZPillTabs
-import com.zoomers.app.designsystem.theme.Shapes
 import com.zoomers.app.designsystem.theme.Spacing
 import com.zoomers.app.designsystem.theme.ZoomersTheme
 import com.zoomers.app.designsystem.theme.tintFor
@@ -60,21 +64,10 @@ fun SearchScreen(
     val colors = ZoomersTheme.colors
 
     Column(Modifier.fillMaxSize().background(colors.background).safeDrawingPadding()) {
-        OutlinedTextField(
-            value = state.query,
-            onValueChange = viewModel::onQueryChange,
-            modifier = Modifier.fillMaxWidth().padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.lg),
-            placeholder = { Text("Search") },
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = colors.textMuted) },
-            singleLine = true,
-            shape = Shapes.pill,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colors.primary,
-                unfocusedBorderColor = colors.hairline,
-                cursorColor = colors.primary,
-                focusedTextColor = colors.text,
-                unfocusedTextColor = colors.text,
-            ),
+        SearchField(
+            query = state.query,
+            onQueryChange = viewModel::onQueryChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.sm),
         )
 
         if (state.isSearching) {
@@ -82,7 +75,7 @@ fun SearchScreen(
                 options = listOf("People", "Tags"),
                 selectedIndex = if (state.mode == SearchMode.People) 0 else 1,
                 onSelect = { viewModel.setMode(if (it == 0) SearchMode.People else SearchMode.Tags) },
-                modifier = Modifier.fillMaxWidth().padding(Spacing.lg),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg, vertical = Spacing.xs),
             )
         }
 
@@ -177,6 +170,37 @@ private fun ExploreGrid(
                 }
             }
           }
+        }
+    }
+}
+
+/** Compact, Instagram-style search field: a short gray pill with an inline icon. */
+@Composable
+private fun SearchField(query: String, onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    val colors = ZoomersTheme.colors
+    val fill = if (colors.isDark) Color(0xFF262626) else Color(0xFFEFEFEF)
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(fill)
+            .heightIn(min = 40.dp)
+            .padding(horizontal = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Outlined.Search, contentDescription = null, tint = colors.textMuted, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(Spacing.sm))
+        Box(Modifier.weight(1f)) {
+            if (query.isEmpty()) {
+                Text("Search", color = colors.textMuted, style = MaterialTheme.typography.bodyMedium)
+            }
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.text),
+                cursorBrush = SolidColor(colors.primary),
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
