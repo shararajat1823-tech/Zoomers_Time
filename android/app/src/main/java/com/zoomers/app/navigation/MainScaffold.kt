@@ -123,6 +123,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
                     onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                    onOpenReels = { navController.navigate(Routes.REELS) },
                 )
             }
             composable("${Routes.POST}/{postId}") { entry ->

@@ -30,11 +30,14 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -57,6 +60,7 @@ import coil.compose.AsyncImage
 import com.zoomers.app.core.common.formatCount
 import com.zoomers.app.core.model.PostUi
 import com.zoomers.app.core.model.ProfileUi
+import com.zoomers.app.core.model.ReelUi
 import com.zoomers.app.designsystem.component.EmptyState
 import com.zoomers.app.designsystem.component.ErrorState
 import com.zoomers.app.designsystem.component.ZAvatar
@@ -71,6 +75,7 @@ fun ProfileScreen(
     onOpenPost: (String) -> Unit = {},
     onEditProfile: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenReels: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -87,6 +92,7 @@ fun ProfileScreen(
                 onEditProfile = onEditProfile,
                 onOpenSettings = onOpenSettings,
                 onSelectTab = viewModel::selectTab,
+                onOpenReels = onOpenReels,
             )
             else -> EmptyState("No profile")
         }
@@ -102,9 +108,15 @@ private fun ProfileContent(
     onEditProfile: () -> Unit,
     onOpenSettings: () -> Unit,
     onSelectTab: (ProfileTab) -> Unit,
+    onOpenReels: () -> Unit,
 ) {
     val profile = state.profile!!
-    val shown = if (state.tab == ProfileTab.Grid) state.posts else state.saved
+    val posts = if (state.tab == ProfileTab.Grid) state.posts else state.saved
+    val loadingTab = (state.tab == ProfileTab.Saved && state.savedLoading) || (state.tab == ProfileTab.Reels && state.reelsLoading)
+    val isEmpty = when (state.tab) {
+        ProfileTab.Reels -> state.reels.isEmpty()
+        else -> posts.isEmpty()
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridColumns),
@@ -114,29 +126,38 @@ private fun ProfileContent(
         item(span = { GridItemSpan(maxLineSpan) }) {
             ProfileHeader(profile = profile, onEditProfile = onEditProfile, onLogout = onLogout, onOpenSettings = onOpenSettings)
         }
-        // ---- tab bar (Grid / Saved) ----
+        // ---- tab bar (Grid / Reels / Saved) ----
         item(span = { GridItemSpan(maxLineSpan) }) {
             ProfileTabBar(selected = state.tab, onSelect = onSelectTab)
         }
 
         // ---- empty / loading states for the active tab ----
-        if (state.tab == ProfileTab.Saved && state.savedLoading && shown.isEmpty()) {
+        if (loadingTab && isEmpty) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(Modifier.fillMaxWidth().padding(Spacing.xxl), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(28.dp), color = ZoomersTheme.colors.accent)
                 }
             }
-        } else if (shown.isEmpty()) {
+        } else if (isEmpty) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                val msg = if (state.tab == ProfileTab.Grid) "No posts yet" else "No saved posts yet"
-                val icon = if (state.tab == ProfileTab.Grid) Icons.Filled.GridView else Icons.Outlined.BookmarkBorder
+                val (msg, icon) = when (state.tab) {
+                    ProfileTab.Grid -> "No posts yet" to Icons.Filled.GridView
+                    ProfileTab.Reels -> "No reels yet" to Icons.Filled.PlayCircle
+                    ProfileTab.Saved -> "No saved posts yet" to Icons.Outlined.BookmarkBorder
+                }
                 EmptyState(msg, icon = icon)
             }
         }
 
-        // ---- the grid of photos ----
-        items(shown, key = { it.id }) { post ->
-            PostThumb(post = post, onOpenPost = onOpenPost)
+        // ---- the grid ----
+        if (state.tab == ProfileTab.Reels) {
+            items(state.reels, key = { it.id }) { reel ->
+                ReelThumb(reel = reel, onOpen = onOpenReels)
+            }
+        } else {
+            items(posts, key = { it.id }) { post ->
+                PostThumb(post = post, onOpenPost = onOpenPost)
+            }
         }
     }
 }
@@ -307,6 +328,12 @@ private fun ProfileTabBar(selected: ProfileTab, onSelect: (ProfileTab) -> Unit) 
         )
         TabCell(
             modifier = Modifier.weight(1f),
+            selected = selected == ProfileTab.Reels,
+            icon = if (selected == ProfileTab.Reels) Icons.Filled.PlayCircle else Icons.Outlined.PlayCircle,
+            onClick = { onSelect(ProfileTab.Reels) },
+        )
+        TabCell(
+            modifier = Modifier.weight(1f),
             selected = selected == ProfileTab.Saved,
             icon = if (selected == ProfileTab.Saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
             onClick = { onSelect(ProfileTab.Saved) },
@@ -359,5 +386,31 @@ private fun PostThumb(post: PostUi, onOpenPost: (String) -> Unit) {
                 modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(18.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun ReelThumb(reel: ReelUi, onOpen: () -> Unit) {
+    Box(
+        Modifier
+            .padding(1.dp)
+            .aspectRatio(0.72f)
+            .background(tintFor(reel.id))
+            .clickable { onOpen() },
+    ) {
+        if (!reel.thumbnailUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = reel.thumbnailUrl,
+                contentDescription = reel.caption,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Icon(
+            imageVector = Icons.Filled.PlayArrow,
+            contentDescription = "Reel",
+            tint = Color.White,
+            modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(18.dp),
+        )
     }
 }

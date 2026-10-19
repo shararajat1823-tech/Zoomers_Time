@@ -231,6 +231,13 @@ interface ZoomersApi {
         @Query("limit") limit: Int = 10,
     ): Response<CursorPageDto<ReelViewDto>>
 
+    @GET("users/{userId}/reels")
+    suspend fun userReels(
+        @Path("userId") userId: String,
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int = 24,
+    ): Response<CursorPageDto<ReelViewDto>>
+
     @POST("reels")
     suspend fun createReel(@Body body: CreateReelRequestDto): Response<ReelViewDto>
 

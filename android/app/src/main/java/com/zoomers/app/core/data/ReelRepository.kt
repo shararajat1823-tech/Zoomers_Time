@@ -23,6 +23,15 @@ class ReelRepository @Inject constructor(
             is ApiResult.Error -> r
         }
 
+    /** Reels published by a specific user, for their profile's Reels tab. */
+    suspend fun userReels(userId: String, cursor: String? = null, limit: Int = 24): ApiResult<ReelPage> =
+        when (val r = safeApiCall { api.userReels(userId, cursor, limit) }) {
+            is ApiResult.Success -> ApiResult.Success(
+                ReelPage(items = r.data.items.map { it.toUi() }, nextCursor = r.data.nextCursor),
+            )
+            is ApiResult.Error -> r
+        }
+
     /**
      * Uploads the picked video (via the shared media pipeline) and publishes a reel.
      * [video] carries the raw bytes + probed dimensions; [durationMs] comes from the
