@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -113,7 +115,7 @@ private fun NavCell(item: NavItem, selected: Boolean, onClick: () -> Unit, modif
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    androidx.compose.material.icons.Icons.Filled.Add,
+                    Icons.Filled.Add,
                     contentDescription = item.label,
                     tint = Color.White,
                     modifier = Modifier.size(24.dp),
