@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -91,13 +92,35 @@ fun ListRowsSkeleton(count: Int = 8, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EmptyState(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
+fun EmptyState(
+    title: String,
+    subtitle: String? = null,
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+) {
     val colors = ZoomersTheme.colors
     Column(
         modifier = modifier.fillMaxWidth().padding(Spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
+        if (icon != null) {
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(colors.surfaceElevated),
+                contentAlignment = Alignment.Center,
+            ) {
+                androidx.compose.material3.Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = colors.textMuted,
+                    modifier = Modifier.size(34.dp),
+                )
+            }
+            Box(Modifier.height(Spacing.sm))
+        }
         Text(title, style = MaterialTheme.typography.titleMedium, color = colors.text, textAlign = TextAlign.Center)
         if (subtitle != null) {
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = colors.textMuted, textAlign = TextAlign.Center)

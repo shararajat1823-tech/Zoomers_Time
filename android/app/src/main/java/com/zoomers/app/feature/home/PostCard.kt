@@ -28,6 +28,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -185,12 +186,21 @@ fun PostCard(
         // Likes + caption + comments + time
         Column(modifier = Modifier.padding(horizontal = Spacing.lg)) {
             if (post.likeCount > 0) {
-                Text(
-                    "${formatCount(post.likeCount)} likes",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.text,
-                )
+                androidx.compose.animation.AnimatedContent(
+                    targetState = post.likeCount,
+                    transitionSpec = {
+                        (androidx.compose.animation.slideInVertically { it } + androidx.compose.animation.fadeIn())
+                            .togetherWith(androidx.compose.animation.slideOutVertically { -it } + androidx.compose.animation.fadeOut())
+                    },
+                    label = "likeCount",
+                ) { count ->
+                    Text(
+                        "${formatCount(count)} likes",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.text,
+                    )
+                }
                 Spacer(Modifier.size(Spacing.xs))
             }
             if (!post.caption.isNullOrBlank()) {

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -75,7 +76,12 @@ fun InboxScreen(
                 state.error != null && state.conversations.isEmpty() ->
                     EmptyState("Couldn't load messages", state.error!!, modifier = Modifier.padding(top = Spacing.xxl))
                 state.conversations.isEmpty() ->
-                    EmptyState("No messages yet", "Start a chat from someone's profile.", modifier = Modifier.padding(top = Spacing.xxl))
+                    EmptyState(
+                        "No messages yet",
+                        "Start a chat from someone's profile.",
+                        modifier = Modifier.padding(top = Spacing.xxl),
+                        icon = Icons.AutoMirrored.Outlined.Chat,
+                    )
                 else -> LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     items(state.conversations, key = { it.id }) { c ->
                         ConversationRow(c, onClick = { onOpenChat(c.otherUserId) })

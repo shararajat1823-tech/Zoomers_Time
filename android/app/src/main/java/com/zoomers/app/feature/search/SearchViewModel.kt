@@ -29,6 +29,7 @@ data class SearchUiState(
     // Discovery grid shown when the query is empty.
     val explorePosts: List<PostUi> = emptyList(),
     val exploreLoading: Boolean = false,
+    val exploreRefreshing: Boolean = false,
     val exploreCursor: String? = null,
     val error: String? = null,
 ) {
@@ -84,16 +85,22 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun refreshExplore() = loadExplore()
+    fun refreshExplore() = loadExplore(refresh = true)
 
-    private fun loadExplore() {
-        _state.update { it.copy(exploreLoading = true, error = null) }
+    private fun loadExplore(refresh: Boolean = false) {
+        _state.update {
+            it.copy(
+                exploreLoading = !refresh && it.explorePosts.isEmpty(),
+                exploreRefreshing = refresh,
+                error = null,
+            )
+        }
         viewModelScope.launch {
             when (val r = feedRepository.explore(cursor = null)) {
                 is ApiResult.Success -> _state.update {
-                    it.copy(exploreLoading = false, explorePosts = r.data.items, exploreCursor = r.data.nextCursor)
+                    it.copy(exploreLoading = false, exploreRefreshing = false, explorePosts = r.data.items, exploreCursor = r.data.nextCursor)
                 }
-                is ApiResult.Error -> _state.update { it.copy(exploreLoading = false, error = r.message) }
+                is ApiResult.Error -> _state.update { it.copy(exploreLoading = false, exploreRefreshing = false, error = r.message) }
             }
         }
     }

@@ -91,9 +91,11 @@ fun SearchScreen(
                 !state.isSearching -> ExploreGrid(
                     posts = state.explorePosts,
                     loading = state.exploreLoading,
+                    refreshing = state.exploreRefreshing,
                     gridColumns = gridColumns,
                     onOpenPost = onOpenPost,
                     onLoadMore = viewModel::loadMoreExplore,
+                    onRefresh = viewModel::refreshExplore,
                 )
                 state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Loading…", color = colors.textMuted)
@@ -121,13 +123,16 @@ fun SearchScreen(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun ExploreGrid(
     posts: List<PostUi>,
     loading: Boolean,
+    refreshing: Boolean,
     gridColumns: Int,
     onOpenPost: (String) -> Unit,
     onLoadMore: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     val colors = ZoomersTheme.colors
     val gridState = rememberLazyGridState()
@@ -143,7 +148,12 @@ private fun ExploreGrid(
     when {
         loading && posts.isEmpty() -> com.zoomers.app.designsystem.component.PhotoGridSkeleton(columns = gridColumns)
         posts.isEmpty() -> CenteredHint("Nothing to explore yet — be the first to post!")
-        else -> LazyVerticalGrid(
+        else -> androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+          LazyVerticalGrid(
             state = gridState,
             columns = GridCells.Fixed(gridColumns),
             modifier = Modifier.fillMaxSize(),
@@ -166,6 +176,7 @@ private fun ExploreGrid(
                     }
                 }
             }
+          }
         }
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -128,6 +129,7 @@ fun HomeScreen(
                                     title = "Your feed is quiet",
                                     subtitle = "Follow a few creators — then pull down to refresh.",
                                     modifier = Modifier.fillParentMaxWidth().padding(top = Spacing.xxl),
+                                    icon = Icons.Outlined.PhotoCamera,
                                 )
                             }
                         } else {
