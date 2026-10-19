@@ -58,9 +58,7 @@ fun ProfileScreen(
 
     Box(Modifier.fillMaxSize().safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         when {
-            state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Loading…", color = ZoomersTheme.colors.textMuted)
-            }
+            state.loading -> com.zoomers.app.designsystem.component.PhotoGridSkeleton(columns = gridColumns)
             state.error != null -> ErrorState(state.error!!, onRetry = viewModel::load, modifier = Modifier.padding(top = Spacing.xxl))
             state.profile != null -> ProfileContent(
                 profile = state.profile!!,

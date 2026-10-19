@@ -141,9 +141,7 @@ private fun ExploreGrid(
     LaunchedEffect(shouldLoadMore) { if (shouldLoadMore) onLoadMore() }
 
     when {
-        loading && posts.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = colors.primary, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
-        }
+        loading && posts.isEmpty() -> com.zoomers.app.designsystem.component.PhotoGridSkeleton(columns = gridColumns)
         posts.isEmpty() -> CenteredHint("Nothing to explore yet — be the first to post!")
         else -> LazyVerticalGrid(
             state = gridState,

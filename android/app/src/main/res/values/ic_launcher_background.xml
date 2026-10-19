@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1E7A6E</color>
+    <!-- Splash background (Android 12+). Brand magenta behind the white "z". -->
+    <color name="ic_launcher_background">#D62976</color>
 </resources>

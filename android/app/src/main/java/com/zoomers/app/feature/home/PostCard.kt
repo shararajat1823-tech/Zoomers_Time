@@ -65,6 +65,7 @@ fun PostCard(
     modifier: Modifier = Modifier,
 ) {
     val colors = ZoomersTheme.colors
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     Column(modifier = modifier.fillMaxWidth()) {
         // Header
         Row(
@@ -97,6 +98,7 @@ fun PostCard(
                     detectTapGestures(onDoubleTap = {
                         if (!post.hasLiked) onLikeToggle(post)
                         showHeart = true
+                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                     })
                 },
             ) {
@@ -163,7 +165,10 @@ fun PostCard(
                 icon = if (post.hasLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 tint = if (post.hasLiked) colors.like else colors.text,
                 contentDescription = "Like",
-                onClick = { onLikeToggle(post) },
+                onClick = {
+                    onLikeToggle(post)
+                    if (!post.hasLiked) haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                },
                 scale = likeScale.value,
             )
             ActionIcon(Icons.Outlined.ChatBubbleOutline, colors.text, "Comment") { onOpenComments(post.id) }

@@ -78,6 +78,10 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
             navController = navController,
             startDestination = Routes.HOME,
             modifier = contentModifier,
+            enterTransition = { androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(180)) },
+            exitTransition = { androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(180)) },
+            popEnterTransition = { androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(180)) },
+            popExitTransition = { androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(180)) },
         ) {
             composable(Routes.HOME) {
                 HomeScreen(

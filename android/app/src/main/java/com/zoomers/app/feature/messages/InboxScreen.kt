@@ -71,9 +71,7 @@ fun InboxScreen(
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
-                state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = colors.primary, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
-                }
+                state.loading -> com.zoomers.app.designsystem.component.ListRowsSkeleton()
                 state.error != null && state.conversations.isEmpty() ->
                     EmptyState("Couldn't load messages", state.error!!, modifier = Modifier.padding(top = Spacing.xxl))
                 state.conversations.isEmpty() ->

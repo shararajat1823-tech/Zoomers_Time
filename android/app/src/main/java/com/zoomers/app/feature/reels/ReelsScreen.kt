@@ -161,11 +161,17 @@ private fun ReelPage(
     onToggleLike: () -> Unit,
     onOpenProfile: () -> Unit,
 ) {
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .pointerInput(reel.id) { detectTapGestures(onDoubleTap = { onToggleLike() }) },
+            .pointerInput(reel.id) {
+                detectTapGestures(onDoubleTap = {
+                    onToggleLike()
+                    haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                })
+            },
     ) {
         if (isActive) {
             AndroidView(

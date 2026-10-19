@@ -4,8 +4,8 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Cream block "z" wordmark, centred in the adaptive safe zone. -->
+    <!-- White block "z" wordmark, centred in the adaptive safe zone. -->
     <path
-        android:fillColor="#F4F2EA"
+        android:fillColor="#FFFFFF"
         android:pathData="M32,36 h44 v10 l-30,20 h30 v10 h-44 v-10 l30,-20 h-30 z" />
 </vector>

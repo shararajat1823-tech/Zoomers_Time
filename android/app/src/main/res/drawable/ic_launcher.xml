@@ -4,13 +4,13 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#1E7A6E"
+        android:fillColor="#D62976"
         android:pathData="M0,0h108v108h-108z" />
     <!-- Stylized 'Z' aperture mark -->
     <path
-        android:fillColor="#F4F2EA"
+        android:fillColor="#FFFFFF"
         android:pathData="M34,38h40v8l-26,24h26v8h-40v-8l26,-24h-26z" />
     <path
-        android:fillColor="#7FD1C4"
+        android:fillColor="#FEDA75"
         android:pathData="M54,30m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
 </vector>
