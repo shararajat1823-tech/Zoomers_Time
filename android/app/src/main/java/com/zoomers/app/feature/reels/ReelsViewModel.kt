@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zoomers.app.core.data.NewPostImage
 import com.zoomers.app.core.data.ReelRepository
+import com.zoomers.app.core.data.UserRepository
 import com.zoomers.app.core.model.ReelUi
 import com.zoomers.app.core.network.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,12 +27,15 @@ data class ReelsUiState(
     val nextCursor: String? = null,
     val uploading: Boolean = false,
     val error: String? = null,
+    /** Author ids the viewer followed during this session (hides the Follow pill). */
+    val followedAuthors: Set<String> = emptySet(),
 )
 
 @HiltViewModel
 class ReelsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val reelRepository: ReelRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReelsUiState())
@@ -83,6 +87,17 @@ class ReelsViewModel @Inject constructor(
                 _state.update { s ->
                     s.copy(reels = s.reels.map { if (it.id == reel.id) it.copy(likeCount = r.data) else it })
                 }
+            }
+        }
+    }
+
+    fun follow(authorId: String) {
+        if (authorId in _state.value.followedAuthors) return
+        _state.update { it.copy(followedAuthors = it.followedAuthors + authorId) }
+        viewModelScope.launch {
+            if (userRepository.follow(authorId) is ApiResult.Error) {
+                // Revert if the server rejected it (e.g. private account pending request stays hidden).
+                _state.update { it.copy(followedAuthors = it.followedAuthors - authorId) }
             }
         }
     }
