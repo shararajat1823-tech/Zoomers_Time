@@ -21,12 +21,16 @@ internal object ZoomersPalette {
     val InkMuted = Color(0xFF8E8E8E)
     val HairlineLight = Color(0xFFDBDBDB)
 
-    // Dark neutrals (true black like modern social apps)
-    val Black = Color(0xFF000000)
-    val BlackElevated = Color(0xFF121212)
-    val Mist = Color(0xFFFAFAFA)
-    val MistMuted = Color(0xFFA8A8A8)
-    val HairlineDark = Color(0xFF262626)
+    // Dark neutrals — a deep navy canvas with elevated card surfaces.
+    val Black = Color(0xFF0B0E17)
+    val BlackElevated = Color(0xFF171D2E)
+    val Mist = Color(0xFFF5F7FA)
+    val MistMuted = Color(0xFF8A93A6)
+    val HairlineDark = Color(0xFF232A3D)
+
+    // Accent gradient (selected chips, create button): blue -> violet.
+    val AccentBlue = Color(0xFF4D6CFE)
+    val AccentViolet = Color(0xFF9B4DFF)
 
     // Story ring / brand gradient stops (warm → magenta → indigo).
     val G1 = Color(0xFFFEDA75)
@@ -41,6 +45,9 @@ internal object ZoomersPalette {
     val Gray3 = Color(0xFFD8D8D8)
     val Gray4 = Color(0xFFCDCDCD)
 }
+
+/** Accent gradient (blue -> violet) for selected chips and the create button. */
+val AccentGradient = listOf(ZoomersPalette.AccentBlue, ZoomersPalette.AccentViolet)
 
 /** Story-ring / brand gradient stops, used for a sweep/linear brush. */
 val StoryGradient = listOf(

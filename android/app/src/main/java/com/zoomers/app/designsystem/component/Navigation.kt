@@ -106,7 +106,19 @@ private fun NavCell(item: NavItem, selected: Boolean, onClick: () -> Unit, modif
                     AvatarDot(item.avatarUrl, item.avatarKey ?: item.route, size = if (selected) 26.dp else 28.dp)
                 }
             }
-            // Create is a plain outline/filled icon (no colored tile).
+            // Create is a filled gradient circle with a plus.
+            item.isCreate -> Box(
+                modifier = Modifier.size(38.dp).clip(CircleShape)
+                    .background(androidx.compose.ui.graphics.Brush.linearGradient(com.zoomers.app.designsystem.theme.AccentGradient)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    androidx.compose.material.icons.Icons.Filled.Add,
+                    contentDescription = item.label,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
             else -> Icon(
                 if (selected) item.selectedIcon else item.icon,
                 contentDescription = item.label,

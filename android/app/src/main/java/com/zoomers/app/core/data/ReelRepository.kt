@@ -28,14 +28,21 @@ class ReelRepository @Inject constructor(
      * [video] carries the raw bytes + probed dimensions; [durationMs] comes from the
      * client's metadata probe.
      */
-    suspend fun create(video: NewPostImage, caption: String?, durationMs: Int): ApiResult<ReelUi> {
+    suspend fun create(video: NewPostImage, thumbnail: NewPostImage?, caption: String?, durationMs: Int): ApiResult<ReelUi> {
         val sessionId = when (val r = uploader.upload(video, "ReelVideo")) {
             is ApiResult.Success -> r.data
             is ApiResult.Error -> return r
         }
+        // Best-effort poster frame; a reel still publishes fine without it.
+        val thumbnailSessionId = thumbnail?.let {
+            when (val r = uploader.upload(it, "ReelThumbnail")) {
+                is ApiResult.Success -> r.data
+                is ApiResult.Error -> null
+            }
+        }
         val body = CreateReelRequestDto(
             uploadSessionId = sessionId,
-            thumbnailUploadSessionId = null,
+            thumbnailUploadSessionId = thumbnailSessionId,
             caption = caption?.trim()?.ifBlank { null },
             width = video.width,
             height = video.height,

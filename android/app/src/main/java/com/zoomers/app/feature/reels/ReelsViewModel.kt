@@ -96,7 +96,7 @@ class ReelsViewModel @Inject constructor(
                 _state.update { it.copy(uploading = false, error = "Couldn't read that video, or it's too large (max 100 MB).") }
                 return@launch
             }
-            when (val r = reelRepository.create(probe.video, caption, probe.durationMs)) {
+            when (val r = reelRepository.create(probe.video, probe.thumbnail, caption, probe.durationMs)) {
                 is ApiResult.Success -> _state.update {
                     it.copy(uploading = false, reels = listOf(r.data) + it.reels)
                 }
@@ -105,7 +105,7 @@ class ReelsViewModel @Inject constructor(
         }
     }
 
-    private data class Probe(val video: NewPostImage, val durationMs: Int)
+    private data class Probe(val video: NewPostImage, val durationMs: Int, val thumbnail: NewPostImage?)
 
     private fun readVideo(uri: Uri): Probe? {
         return try {
@@ -120,7 +120,17 @@ class ReelsViewModel @Inject constructor(
                 val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
                 if (rotation == 90 || rotation == 270) { val t = w; w = h; h = t }
                 val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toIntOrNull() ?: 0
-                Probe(NewPostImage(bytes = bytes, contentType = "video/mp4", width = w, height = h), duration)
+
+                // Best-effort poster frame (first keyframe) for grids/first paint.
+                val thumbnail = runCatching {
+                    retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)?.let { bmp ->
+                        val out = java.io.ByteArrayOutputStream()
+                        bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+                        NewPostImage(bytes = out.toByteArray(), contentType = "image/jpeg", width = bmp.width, height = bmp.height)
+                    }
+                }.getOrNull()
+
+                Probe(NewPostImage(bytes = bytes, contentType = "video/mp4", width = w, height = h), duration, thumbnail)
             } finally {
                 retriever.release()
             }

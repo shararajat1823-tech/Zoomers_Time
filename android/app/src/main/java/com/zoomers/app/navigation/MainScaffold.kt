@@ -98,6 +98,7 @@ fun MainScaffold(windowSizeClass: WindowSizeClass) {
                     onOpenUser = { username -> navController.navigate("${Routes.USER}/$username") },
                     onOpenHashtag = { tag -> navController.navigate("${Routes.HASHTAG}/$tag") },
                     onOpenPost = { postId -> navController.navigate("${Routes.POST}/$postId") },
+                    onOpenReels = { navController.navigate(Routes.REELS) },
                     gridColumns = layout.gridColumns,
                 )
             }

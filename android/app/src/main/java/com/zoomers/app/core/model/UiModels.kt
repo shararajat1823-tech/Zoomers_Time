@@ -296,6 +296,54 @@ data class ReelUi(
 
 data class ReelPage(val items: List<ReelUi>, val nextCursor: String?)
 
+// ---- Gallery (unified photo/video card for the Explore tabs) ----
+
+data class GalleryItem(
+    val id: String,
+    val imageUrl: String?,
+    val aspectRatio: Float,
+    val isVideo: Boolean,
+    val durationLabel: String?,
+    val photoCount: Int,
+    val isFavorite: Boolean,
+    val postId: String?,
+    val createdAtIso: String,
+)
+
+fun PostUi.toGalleryItem(): GalleryItem {
+    val first = media.firstOrNull()
+    return GalleryItem(
+        id = "post_$id",
+        imageUrl = first?.let { it.thumbnailUrl ?: it.url },
+        aspectRatio = (first?.aspectRatio ?: 1f).coerceIn(0.66f, 1.4f),
+        isVideo = false,
+        durationLabel = null,
+        photoCount = media.size,
+        isFavorite = hasSaved,
+        postId = id,
+        createdAtIso = createdAtIso,
+    )
+}
+
+fun ReelUi.toGalleryItem(): GalleryItem = GalleryItem(
+    id = "reel_$id",
+    imageUrl = thumbnailUrl,
+    aspectRatio = if (width > 0 && height > 0) (width.toFloat() / height).coerceIn(0.56f, 1.0f) else 0.66f,
+    isVideo = true,
+    durationLabel = formatClock(durationMs),
+    photoCount = 1,
+    isFavorite = viewerHasLiked,
+    postId = null,
+    createdAtIso = createdAtIso,
+)
+
+private fun formatClock(ms: Int): String {
+    val totalSec = (ms / 1000).coerceAtLeast(0)
+    val m = totalSec / 60
+    val s = totalSec % 60
+    return "%d:%02d".format(m, s)
+}
+
 fun ReelViewDto.toUi(): ReelUi = ReelUi(
     id = id,
     authorId = author.id,

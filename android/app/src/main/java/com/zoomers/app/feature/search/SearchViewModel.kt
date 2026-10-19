@@ -3,10 +3,13 @@ package com.zoomers.app.feature.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zoomers.app.core.data.FeedRepository
+import com.zoomers.app.core.data.ProfileRepository
+import com.zoomers.app.core.data.ReelRepository
 import com.zoomers.app.core.data.UserRepository
+import com.zoomers.app.core.model.GalleryItem
 import com.zoomers.app.core.model.HashtagUi
-import com.zoomers.app.core.model.PostUi
 import com.zoomers.app.core.model.UserListItemUi
+import com.zoomers.app.core.model.toGalleryItem
 import com.zoomers.app.core.network.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -20,17 +23,21 @@ import javax.inject.Inject
 
 enum class SearchMode { People, Tags }
 
+/** Content filter for the explore gallery, matching the All/Photos/Videos/Favorites chips. */
+enum class GalleryTab { All, Photos, Videos, Favorites }
+
 data class SearchUiState(
     val query: String = "",
     val mode: SearchMode = SearchMode.People,
     val loading: Boolean = false,
     val users: List<UserListItemUi> = emptyList(),
     val hashtags: List<HashtagUi> = emptyList(),
-    // Discovery grid shown when the query is empty.
-    val explorePosts: List<PostUi> = emptyList(),
-    val exploreLoading: Boolean = false,
-    val exploreRefreshing: Boolean = false,
-    val exploreCursor: String? = null,
+    // Explore gallery (shown when the query is empty).
+    val galleryTab: GalleryTab = GalleryTab.All,
+    val gallery: List<GalleryItem> = emptyList(),
+    val galleryLoading: Boolean = false,
+    val galleryRefreshing: Boolean = false,
+    val galleryCursor: String? = null,
     val error: String? = null,
 ) {
     val isSearching: Boolean get() = query.isNotBlank()
@@ -40,6 +47,8 @@ data class SearchUiState(
 class SearchViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val feedRepository: FeedRepository,
+    private val reelRepository: ReelRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SearchUiState())
@@ -48,7 +57,9 @@ class SearchViewModel @Inject constructor(
     private var searchJob: Job? = null
     private var loadingMore = false
 
-    init { loadExplore() }
+    init { loadGallery() }
+
+    // ---- text search (People / Tags) ----
 
     fun setMode(mode: SearchMode) {
         if (mode == _state.value.mode) return
@@ -64,13 +75,12 @@ class SearchViewModel @Inject constructor(
     private fun runSearch(q: String) {
         searchJob?.cancel()
         if (q.isBlank()) {
-            // Back to the explore grid; clear any stale results.
             _state.update { it.copy(loading = false, users = emptyList(), hashtags = emptyList(), error = null) }
-            if (_state.value.explorePosts.isEmpty()) loadExplore()
+            if (_state.value.gallery.isEmpty()) loadGallery()
             return
         }
         searchJob = viewModelScope.launch {
-            delay(300) // debounce
+            delay(300)
             _state.update { it.copy(loading = true, error = null) }
             when (_state.value.mode) {
                 SearchMode.People -> when (val r = userRepository.searchUsers(q.trim())) {
@@ -85,38 +95,78 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun refreshExplore() = loadExplore(refresh = true)
+    // ---- explore gallery (All / Photos / Videos / Favorites) ----
 
-    private fun loadExplore(refresh: Boolean = false) {
+    fun selectGalleryTab(tab: GalleryTab) {
+        if (tab == _state.value.galleryTab) return
+        _state.update { it.copy(galleryTab = tab, gallery = emptyList(), galleryCursor = null) }
+        loadGallery()
+    }
+
+    fun refreshGallery() = loadGallery(refresh = true)
+
+    private fun loadGallery(refresh: Boolean = false) {
+        val tab = _state.value.galleryTab
         _state.update {
             it.copy(
-                exploreLoading = !refresh && it.explorePosts.isEmpty(),
-                exploreRefreshing = refresh,
+                galleryLoading = !refresh && it.gallery.isEmpty(),
+                galleryRefreshing = refresh,
                 error = null,
             )
         }
         viewModelScope.launch {
-            when (val r = feedRepository.explore(cursor = null)) {
-                is ApiResult.Success -> _state.update {
-                    it.copy(exploreLoading = false, exploreRefreshing = false, explorePosts = r.data.items, exploreCursor = r.data.nextCursor)
-                }
-                is ApiResult.Error -> _state.update { it.copy(exploreLoading = false, exploreRefreshing = false, error = r.message) }
+            val result = fetchGallery(tab, cursor = null)
+            _state.update {
+                if (result == null) it.copy(galleryLoading = false, galleryRefreshing = false, error = "Couldn't load.")
+                else it.copy(galleryLoading = false, galleryRefreshing = false, gallery = result.items, galleryCursor = result.cursor)
             }
         }
     }
 
-    fun loadMoreExplore() {
-        val cursor = _state.value.exploreCursor ?: return
+    fun loadMoreGallery() {
+        val cursor = _state.value.galleryCursor ?: return
         if (loadingMore) return
         loadingMore = true
+        val tab = _state.value.galleryTab
         viewModelScope.launch {
-            when (val r = feedRepository.explore(cursor = cursor)) {
-                is ApiResult.Success -> _state.update {
-                    it.copy(explorePosts = it.explorePosts + r.data.items, exploreCursor = r.data.nextCursor)
+            val result = fetchGallery(tab, cursor = cursor, moreOnly = true)
+            if (result != null) {
+                _state.update {
+                    val existing = it.gallery.map { g -> g.id }.toSet()
+                    it.copy(gallery = it.gallery + result.items.filter { g -> g.id !in existing }, galleryCursor = result.cursor)
                 }
-                is ApiResult.Error -> { /* keep what we have */ }
             }
             loadingMore = false
+        }
+    }
+
+    private data class GalleryPage(val items: List<GalleryItem>, val cursor: String?)
+
+    /**
+     * Fetches a page for the given tab. Pagination follows the tab's primary source
+     * (explore posts for All/Photos, reels for Videos, saved for Favorites). For
+     * All, the first page also folds in reels, interleaved by recency.
+     */
+    private suspend fun fetchGallery(tab: GalleryTab, cursor: String?, moreOnly: Boolean = false): GalleryPage? {
+        return when (tab) {
+            GalleryTab.Photos -> (feedRepository.explore(cursor) as? ApiResult.Success)?.data
+                ?.let { GalleryPage(it.items.map { p -> p.toGalleryItem() }, it.nextCursor) }
+
+            GalleryTab.Videos -> (reelRepository.feed(cursor) as? ApiResult.Success)?.data
+                ?.let { GalleryPage(it.items.map { r -> r.toGalleryItem() }, it.nextCursor) }
+
+            GalleryTab.Favorites -> (profileRepository.savedPosts(cursor) as? ApiResult.Success)?.data
+                ?.let { GalleryPage(it.items.map { p -> p.toGalleryItem() }, it.nextCursor) }
+
+            GalleryTab.All -> {
+                val explore = (feedRepository.explore(cursor) as? ApiResult.Success)?.data ?: return null
+                var items = explore.items.map { it.toGalleryItem() }
+                if (!moreOnly) {
+                    val reels = (reelRepository.feed(null) as? ApiResult.Success)?.data?.items.orEmpty().map { it.toGalleryItem() }
+                    items = (items + reels).sortedByDescending { it.createdAtIso }
+                }
+                GalleryPage(items, explore.nextCursor)
+            }
         }
     }
 }
